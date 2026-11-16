@@ -496,3 +496,7 @@ APK'da "Menyu -> Manba" ga `wss://xauview.onrender.com` yozish ixtiyoriy.
 - GitHub 60 kun aktivliksiz schedule'ni o'chiradi — oyda bir commit kerak.
 - Egress 100 GB/oy; poll 15 s -> ~20 GB/oy.
 - Cold start ~30-50 s (deploydan keyingi birinchi so'rov).
+- Render'ning o'z autoDeploy webhook'i ishlamaydi (GitHub App ulanmagan) -> `.github/workflows/deploy.yml`
+  + `RENDER_API_KEY` secret bilan yopildi. Push -> ~35 s -> live (tekshirildi).
+- Keep-alive workflow qo'lda ishga tushirilib **success** olindi, keyin schedule bo'yicha ishladi
+  (run 43925658346, 439259...).

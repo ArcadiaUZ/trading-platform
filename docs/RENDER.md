@@ -336,3 +336,25 @@ lekin qulaylik uchun yozib qo'yish mumkin: `wss://xauview.onrender.com`.
   oyda bir marta repo'ga commit qiling.
 - Egress 100 GB/oy (poll 15 s -> ~20 GB/oy).
 - Birinchi so'rovda cold start ~30-50 s bo'lishi mumkin.
+
+### 14.4 Avtomatik deploy (CI) — push -> live ~35 s
+
+Render GitHub App bu repo'ga **ulanmagan**, shuning uchun Render'ning o'z `autoDeploy`
+webhook'i ishlamaydi (tekshirildi: pushdan keyin deploy yaratilmadi). Uni **GitHub Actions**
+bilan yopdik:
+
+- `.github/workflows/deploy.yml` — `main` ga har push'da Render API'ga deploy yuboradi,
+  `live` bo'lguncha kutadi (build_failed -> job fail).
+- Secret: `RENDER_API_KEY` (repo -> Settings -> Secrets -> Actions) — o'rnatildi.
+- Tekshirildi: `7a73e57` push -> workflow `success` -> Render deploy `live` (35 s).
+
+```bash
+# qo'lda ham mumkin:
+curl -X POST https://api.render.com/v1/services/srv-dbtka4d9fdbs73bgv800/deploys \
+  -H "Authorization: Bearer rnd_..." -H "Content-Type: application/json" \
+  -d '{"clearCache":"do_not_clear"}'
+```
+
+Kelajakda Render dashboard'da **Settings -> Build & Deploy -> GitHub** ulansa, Render o'zi ham
+deploy qiladi — u holda `deploy.yml` ni o'chirish (yoki `autoDeploy: false`) kerak, aks holda
+ikki marta deploy bo'ladi.
