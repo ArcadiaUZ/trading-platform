@@ -1,0 +1,47 @@
+name: Deploy to Render
+
+# Har push -> Render API orqali deploy. Render GitHub App ulanmagan bo'lsa ham ishlaydi.
+# Talab: repo secret RENDER_API_KEY (Render -> Account Settings -> API Keys).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: render-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Trigger Render deploy
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+        run: |
+          set -euo pipefail
+          SID="srv-dbtka4d9fdbs73bgv800"
+          API="https://api.render.com/v1/services/$SID"
+          if [ -z "${RENDER_API_KEY:-}" ]; then
+            echo "::error::RENDER_API_KEY secret yo'q (Settings -> Secrets -> Actions)"; exit 1
+          fi
+          resp=$(curl -sS -X POST "$API/deploys" -H "Authorization: Bearer $RENDER_API_KEY" -H "Content-Type: application/json" -d '{"clearCache":"do_not_clear"}')
+          echo "trigger: $(echo "$resp" | head -c 300)"
+          id=$(echo "$resp" | jq -r '.id // empty')
+          if [ -z "$id" ]; then echo "::error::deploy yaratilmadi"; exit 1; fi
+          echo "deploy_id=$id"
+          for i in $(seq 1 60); do
+            st=$(curl -sS "$API/deploys/$id" -H "Authorization: Bearer $RENDER_API_KEY" | jq -r '.status // "unknown"')
+            echo "attempt=$i status=$st"
+            case "$st" in
+              live) echo "::notice::Render deploy LIVE"; exit 0;;
+              build_failed|update_failed|canceled|pre_deploy_failed|deactivated) echo "::error::Render deploy $st"; exit 1;;
+            esac
+            sleep 15
+          done
+          echo "::error::deploy 15 daqiqada tugamadi"; exit 1
