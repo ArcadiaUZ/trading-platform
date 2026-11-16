@@ -464,3 +464,35 @@ Brauzer **o'zi** internetdan narx oladi (CORS ruxsat berilgan manbalar, API kali
 Gorizontal pinch → vaqt zoom ✓ · chart pinch narxni tegmaydi ✓ · vertikal pinch e'tiborsiz ✓ ·
 price-axis pinch → narx scale ✓ · fling 20→42→58→72→77 ✓ · long-press drag → fling yo'q ✓ ·
 dbl-tap price axis → autoPrice ✓.
+
+## 16. RENDER'GA DEPLOY (2026-11-16) — TAYYOR VA ISHLAYAPTI
+
+### 16.1 GitHub
+- Repo: https://github.com/ArcadiaUZ/trading-platform (branch `main`)
+- Push: `524725f` (render.yaml branch fix) -> `d06376f` (keepalive URL) -> `main`
+- Credential helper = `manager` (GitHub Desktop token), push avtomatik o'tdi.
+
+### 16.2 Render (API orqali, dashboard'siz)
+- Service: `srv-dbtka4d9fdbs73bgv800` — `xauview`, **free**, **frankfurt**, **docker**
+- URL: **https://xauview.onrender.com** · deploy `dep-dbtka4t9fdbs73bgva0g` = **live** (42 s)
+- Env: `XAUVIEW_DATA=open`, `XAUVIEW_OPEN_POLL_S=15`, `PYTHONUNBUFFERED=1`
+- Docker: context `.`, Dockerfile `./server/Dockerfile`, health `/api/health`, autoDeploy `yes`
+
+### 16.3 Internetdan tekshiruv (nafaqat localhost)
+- `/api/health` 200 (0.9 s) — `data_mode=open, mt5_available=false, open_available=true`
+- `/api/providers` — `yahoo ok 157 ms` (active)
+- `/api/candles` XAUUSD M1 — real bar 3858.9, `provider=yahoo`
+- `/` — 1 470 231 B, mobil ilova o'zi serverdan beriladi
+- `wss://xauview.onrender.com/ws?symbol=XAUUSD&tf=M1` — **snapshot 600 bar**
+- Chrome 393x873 (Xiaomi 12): 600 bar, YAHOO, LIVE, **0 console error** -> `shots/r20-render-live.png`
+
+### 16.4 Telefon uchun natija
+Brauzerda `https://xauview.onrender.com` ni ochish kifoya — ilova `location.host` dan
+`wss://` ni o'zi oladi (`_m4_ui.js` `base()`), hech qanday sozlash kerak emas.
+APK'da "Menyu -> Manba" ga `wss://xauview.onrender.com` yozish ixtiyoriy.
+
+### 16.5 Cheklovlar
+- Free: 750 h/oy, 15 daq uyqu -> keepalive cron (`*/10`) `active` holatda ro'yxatga olindi.
+- GitHub 60 kun aktivliksiz schedule'ni o'chiradi — oyda bir commit kerak.
+- Egress 100 GB/oy; poll 15 s -> ~20 GB/oy.
+- Cold start ~30-50 s (deploydan keyingi birinchi so'rov).

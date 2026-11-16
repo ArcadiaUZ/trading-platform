@@ -285,3 +285,54 @@ docker run --rm -p 8080:8080 -e XAUVIEW_DATA=open xauview
 - Render Docker deploy: https://render.com/docs/docker
 - Render free limits: https://render.com/docs/free
 - GitHub Actions cron: https://docs.github.com/actions/using-workflows/events-that-trigger-workflows#schedule
+
+## 14. DEPLOY QILINDI (2026-11-16)
+
+| Narsa | Qiymat |
+|---|---|
+| Repo | https://github.com/ArcadiaUZ/trading-platform (branch `main`) |
+| Render service | `srv-dbtka4d9fdbs73bgv800` (`xauview`), frankfurt, free, docker |
+| URL | **https://xauview.onrender.com** |
+| Deploy | `dep-dbtka4t9fdbs73bgva0g` — **live** (build 42 s) |
+| Dashboard | https://dashboard.render.com/web/srv-dbtka4d9fdbs73bgv800 |
+| Keep-alive | `.github/workflows/keepalive.yml` — `active`, URL standart qiymat bilan yozilgan |
+
+API orqali yaratish (takrorlash uchun):
+
+```bash
+curl -X POST https://api.render.com/v1/services \
+  -H "Authorization: Bearer $RENDER_API_KEY" -H "Content-Type: application/json" \
+  -d '{"type":"web_service","name":"xauview","ownerId":"<tea-...>",
+       "repo":"https://github.com/ArcadiaUZ/trading-platform","branch":"main","autoDeploy":"yes",
+       "envVars":[{"key":"XAUVIEW_DATA","value":"open"},{"key":"XAUVIEW_OPEN_POLL_S","value":"15"}],
+       "serviceDetails":{"env":"docker","plan":"free","region":"frankfurt",
+         "healthCheckPath":"/api/health",
+         "envSpecificDetails":{"dockerContext":".","dockerfilePath":"./server/Dockerfile"}}}'
+```
+
+### 14.1 Tekshirildi (internetdan, localhost emas)
+
+- `GET /api/health` -> 200, 0.9 s, `{"ok":true,"mt5":false,"data_mode":"open","open_available":true}`
+- `GET /api/providers` -> `yahoo ok, latency 157 ms`
+- `GET /api/candles?symbol=XAUUSD&tf=M1` -> real narx 3858.9, `provider=yahoo`
+- `GET /` -> 1 470 231 B, `XAUView Mobile` (mobil ilova o'zi shu serverdan beriladi)
+- `wss://xauview.onrender.com/ws?symbol=XAUUSD&tf=M1` -> **snapshot 600 bar**, 26.8 KB
+- Chrome (Xiaomi 12 viewport 393x873): **600 bar, YAHOO chip, LIVE, 0 console error**
+  -> `shots/r20-render-live.png`
+
+### 14.2 Telefonda qanday ochiladi
+
+Ilova **hech qanday sozlashsiz** shu manzilda ishlaydi: `_m4_ui.js` dagi `base()`
+`https://` bo'lsa avtomatik `wss://location.host` ni tanlaydi. Ya'ni telefon brauzerida
+https://xauview.onrender.com ni ochish kifoya. APK'da ham "Menyu -> Manba" ga yozish shart emas,
+lekin qulaylik uchun yozib qo'yish mumkin: `wss://xauview.onrender.com`.
+
+### 14.3 Free tier cheklovlari (halol)
+
+- 750 h/oy (30 kun = 720 h) -> keept-alive bilan 24/7 sig'adi.
+- Instance 15 daqiqa harakatsizlikdan keyin uxlaydi -> keepalive cron 10 daqiqada uradi.
+- GitHub schedule ba'zan 5-15 daqiqa kechikadi; muhim bo'lsa UptimeRobot qo'shing.
+- GitHub 60 kun repo'da aktivlik bo'lmasa schedule workflow'ni o'chirib qo'yadi ->
+  oyda bir marta repo'ga commit qiling.
+- Egress 100 GB/oy (poll 15 s -> ~20 GB/oy).
+- Birinchi so'rovda cold start ~30-50 s bo'lishi mumkin.
