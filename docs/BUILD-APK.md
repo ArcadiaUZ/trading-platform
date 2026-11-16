@@ -105,3 +105,9 @@ Taqqoslash uchun TradingView 1.20.87 XAPK: 52.1 MB yuklab olish / **109.4 MB o'r
 `resources.arsc` = 7 MB, shriftlar 2.6 MB; **web qismi faqat 0.97 MB**
 (`assets/dark/index.html` + `feature_chart_kotlin_js_client.js` 350 KB) - ya'ni ularning charti ham WebView'da.
 Demak 50 MB - bu chart sifati emas, balki ulkan native kod + media.
+
+## v1.3 - MT5 savdo UI
+
+- `mobile/src/_m14_trade.js` qo'shildi (akkaunt, order ticket, pozitsiya/order/tarix, flat).
+- Menyu -> Savdo (MT5). Rejim: PAPER (mock) yoki LIVE (Windows + MT5 terminal).
+- `versionCode 4 / versionName 1.3`, APK ~0.47 MB (assets/index.html 1.47 MB = butun ilova).

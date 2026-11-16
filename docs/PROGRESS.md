@@ -513,6 +513,45 @@ APK'da "Menyu -> Manba" ga `wss://xauview.onrender.com` yozish ixtiyoriy.
 - Eslatma: APK ichidagi ilova "muzlatilgan" (o'z versiyasi bilan); brauzer/PWA esa har doim eng yangi
   (Render'dan). Yangi chart/gesture o'zgarishi -> APK'ni qayta yig'ish.
 
+## 19. MT5 SAVDO (akkaunt + order management) — v1.3
+
+### 19.1 Backend: `server/trade.py` (~1700 satr) + `/api/trade/*`
+10 endpoint: `state, account, login, logout, order, close, modify, cancel, flat, history`.
+Rejimlar: `live` (MT5), `mock` (XAUVIEW_TRADE_MOCK=1 paper), `disabled` (XAUVIEW_TRADE=0).
+Order turlari: market / limit / stop / stop-limit; lot, SL/TP, deviation, comment, magic;
+pozitsiya: to'liq/qismli yopish, SL/TP o'zgartirish; pending: modify/cancel; flat = hammasini yopish.
+Xavfsizlik: parol faqat xotirada, `X-Trade-Token` ixtiyoriy, flat uchun `confirm:true`.
+Test: `server/test_trade.py` — **33 passed**; `test_render_local.py` — 24/24 PASS.
+
+### 19.2 Mobil UI: `mobile/src/_m14_trade.js` (~700 satr)
+Menyu -> **Savdo (MT5)**: PAPER/LIVE badge, kompaniya+server+login, balans/equity/P-L/margin/free/margin-lvl,
+katta SELL/BUY (bid/ask), tablar: Pozitsiya / Order / Tarix, order kartalari (yopish, SL/TP),
+"Yangi order" ticket: side, tur (Market/Limit/Stop/Stop-limit), lot stepper + tez tugmalar,
+narx, SL/TP, "Tekshirish" (dry-run, `order_check`) va "Yuborish"; "Hammasini yopish" (flat);
+Akkaunt sheet: kompaniya/server/login/parol + token, Ulanish/Uzish.
+
+### 19.3 Jonli MT5 (bu kompyuterda) — tekshirildi
+- Terminal: **FundedNext-Server, login 12140048, balance 4987.67 USD, 1:100, XAUUSD/GBPUSD**.
+- `server/app.py`: broker symbol avto-aniqlash qo'shildi (`SYMBOL_CANDIDATES`:
+  XAUUSDm/XAUUSD/XAUUSD.m/GOLD ...) — ilgari `XAUUSDm` qattiq yozilgani uchun MT5 "ulanmagan" ko'rinardi.
+- `server/trade.py`: **muhim bug** — `order_send/order_check` ThreadPoolExecutor oqimida
+  `(-2,'Unnamed arguments not allowed')` qaytaradi; endi `_direct_call()` bilan bevosita chaqiriladi.
+  Shu tufayli dry-run ishladi: market 0.01 XAUUSD -> margin 154.18, free 4833.49, "Done";
+  limit/stop -> margin 0 (to'g'ri); noto'g'ri lot -> 10014 "Invalid volume".
+- UI'dan (Chrome 393x873, lokal server): LIVE badge, FundedNext Ltd #12140048, balans 4 987.67,
+  BUY 3 854.14 / SELL 3 853.54, spread 60, "Tekshirish" -> "OK Done margin: 154.17 · erkin: 4 833.50",
+  **0 JS xato**. Haqiqiy order **yuborilmadi** (faqat dry-run).
+
+### 19.4 Render (bulut) = paper rejim
+Render'da MT5 yo'q -> env `XAUVIEW_TRADE_MOCK=1` qo'yildi: telefon brauzerida PAPER savdo
+(10 000 USD virtual, orderlar darhol bajariladi) — UI ni sinash/demo uchun. Haqiqiy savdo
+faqat Windows server (MT5 terminal ochiq) orqali.
+Ko'p foydalanuvchi uchun MT5 login/parol bilan ulanish broker white-label yoki MetaApi.cloud
+kabi pullik cloud-terminal xizmatini talab qiladi (keyingi bosqich).
+
+### 19.5 APK v1.3
+`versionCode 4 / versionName 1.3`, savdo UI ichida, standart manba `wss://xauview.onrender.com`.
+
 ## 18. APK v1.2 — "app" hissi (splash / keep-screen-on / native bildirishnoma)
 
 - `res/drawable/splash.xml` + `windowBackground` -> ochilishda qora fon + logo (oq flash yo'q).

@@ -431,12 +431,19 @@ function menuSheet(){
   var base = feedBase() || '';
   var h = '<div class="row" id="mChartType"><span class="lbl">Chart turi<small>sham / hollow / bar / chiziq / area</small></span><span class="val" id="mChartVal">' + chartTypeName(S.chartType) + '</span></div>' +
     '<div class="row" id="mDrawList"><span class="lbl">Chizmalar<small>barcha chizmalarni boshqarish</small></span><span class="val">' + (D.items.length ? D.items.length + ' ta' : 'yoq') + '</span></div>' +
+    '<div class="row" id="mTrade"><span class="lbl">Savdo (MT5)<small>' + (function(){
+      try {
+        if (typeof TR !== 'undefined' && TR.st && TR.st.account) return String(TR.st.account.company || TR.st.account.server || '') + ' #' + TR.st.account.login;
+        if (typeof trModeTxt === 'function') return trModeTxt().why;
+      } catch (e) {}
+      return 'akkaunt / order / lot / SL-TP';
+    })() + '</small></span><span class="val">' + (typeof trModeTxt === 'function' ? trModeTxt().t : 'OFF') + '</span></div>' +
     '<div class="row"><span class="lbl">Rejim<small>live yoki oflayn snapshot</small></span><span class="val">' + (FEED.ok ? 'LIVE' : 'OFFLINE') + '</span></div>' +
     '<div class="row"><span class="lbl">Manba<small>server manzili</small></span><span class="val">' + (base ? base.replace(/^wss?:\/\//, '') : 'fayl (oflayn)') + '</span></div>' +
     '<div class="ctl" style="margin-top:8px"><input type="text" id="feedUrl" placeholder="ws://192.168.1.10:8765" value="' + esc(base) + '"></div>' +
     '<div class="btnrow"><button class="btn" id="mReconnect">Ulanish</button><button class="btn" id="mNotify">Bildirishnoma</button></div>' +
     '<div class="row" style="margin-top:6px"><span class="lbl">Demo ma\'lumot<small>MT5 snapshot, ' + META.source + '</small></span></div>' +
-    '<div class="hint">Ma\'lumot: ' + S.sym + ' ' + S.tf + ', ' + cur().length + ' bar. OANDA/FXCM - feed yorlig\'i; real feed server orqali ulanadi. Savdo yo\'q - faqat chart va alertlar.</div>';
+    '<div class="hint">Ma\'lumot: ' + S.sym + ' ' + S.tf + ', ' + cur().length + ' bar. OANDA/FXCM - feed yorlig\'i; real feed server orqali ulanadi. Savdo: Menyu -> Savdo (MT5) - pozitsiya, order, lot, SL/TP.</div>';
   openSheet('Menyu', h, function(body){
     body.querySelector('#mReconnect').addEventListener('click', function(){
       var v = body.querySelector('#feedUrl').value.trim();
@@ -448,6 +455,8 @@ function menuSheet(){
     if (ctv) ctv.addEventListener('click', function(){ closeSheet(); setTimeout(chartSheet, 210); });
     var dl = body.querySelector('#mDrawList');
     if (dl) dl.addEventListener('click', function(){ closeSheet(); setTimeout(toolsSheet, 210); });
+    var tr = body.querySelector('#mTrade');
+    if (tr && typeof tradeSheet === 'function') tr.addEventListener('click', function(){ closeSheet(); setTimeout(tradeSheet, 210); });
   });
 }
 

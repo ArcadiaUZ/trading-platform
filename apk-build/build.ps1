@@ -33,7 +33,7 @@ if ($LASTEXITCODE -ne 0) { throw "aapt2 compile FAIL" }
 Write-Host "[1/6] aapt2 compile OK"
 
 # 2) link -> base apk
-$linkArgs = @("link", "-o", (Join-Path $work "apk\base.apk"), "-I", $PLAT, "--manifest", (Join-Path $Root "AndroidManifest.xml"), "-R", (Join-Path $work "apk\res.zip"), "-A", $assets, "--java", (Join-Path $work "gen"), "--min-sdk-version", "26", "--target-sdk-version", "34", "--version-code", "3", "--version-name", "1.2", "--auto-add-overlay")
+$linkArgs = @("link", "-o", (Join-Path $work "apk\base.apk"), "-I", $PLAT, "--manifest", (Join-Path $Root "AndroidManifest.xml"), "-R", (Join-Path $work "apk\res.zip"), "-A", $assets, "--java", (Join-Path $work "gen"), "--min-sdk-version", "26", "--target-sdk-version", "34", "--version-code", "4", "--version-name", "1.3", "--auto-add-overlay")
 & (Join-Path $BT "aapt2.exe") @linkArgs
 if ($LASTEXITCODE -ne 0) { throw "aapt2 link FAIL" }
 Write-Host "[2/6] aapt2 link OK"

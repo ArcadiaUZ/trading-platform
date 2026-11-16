@@ -2,9 +2,11 @@
 # -*- coding: utf-8 -*-
 """XAUUSD / GBPUSD LIVE feed server (FastAPI + MetaTrader5).
 
-Faqat o'qish (market data) API'lari ishlatiladi:
+Market data API'lari:
     symbol_info, symbol_info_tick, symbol_select, copy_rates_from_pos
-Trading API'lari (order_send, positions, history, ...) ishlatilmaydi.
+Trading (ixtiyoriy, XAUVIEW_TRADE=1): server/trade.py -- /api/trade/* endpointlari
+    order_send, positions_get, orders_get, history_deals_get. MT5 yo'q bo'lsa
+    XAUVIEW_TRADE_MOCK=1 paper-trading ishlaydi (Linux/Render'da ham).
 
 Ishga tushirish:
     python -m uvicorn app:app --host 0.0.0.0 --port 8765
@@ -73,6 +75,12 @@ PORT = int(os.getenv("FEED_PORT", os.getenv("PORT", "8765")))
 SYMBOLS: dict[str, str] = {
     "XAUUSD": os.getenv("XAU_SYMBOL", "XAUUSDm"),
     "GBPUSD": os.getenv("GBP_SYMBOL", "GBPUSDm"),
+}
+# Brokerlar symbol nomlashda farq qiladi (Exness: XAUUSDm, FundedNext: XAUUSD, GOLD ...).
+# connect() paytida mavjudini avtomatik topamiz (birinchi topilgani olinadi).
+SYMBOL_CANDIDATES: dict[str, tuple[str, ...]] = {
+    "XAUUSD": ("XAUUSDm", "XAUUSD", "XAUUSD.m", "XAUUSD_i", "XAUUSD#", "GOLD", "GOLDm", "XAUUSD.r"),
+    "GBPUSD": ("GBPUSDm", "GBPUSD", "GBPUSD.m", "GBPUSD_i", "GBPUSD#", "GBPUSD.r"),
 }
 DEFAULT_DIGITS: dict[str, int] = {"XAUUSD": 3, "GBPUSD": 5}
 
@@ -449,6 +457,23 @@ class MT5Manager:
                 logger.warning("account_info() None - terminal tayyor emas")
                 return False
 
+            # 0) symbol nomlarini broker bo'yicha avto-aniqlash
+            for logical, candidates in SYMBOL_CANDIDATES.items():
+                current = SYMBOLS.get(logical)
+                try:
+                    if current and mt5.symbol_info(current) is not None:
+                        continue
+                except Exception:
+                    pass
+                for candidate in candidates:
+                    try:
+                        if mt5.symbol_info(candidate) is not None:
+                            SYMBOLS[logical] = candidate
+                            logger.info("Symbol avto: %s -> %s", logical, candidate)
+                            break
+                    except Exception:
+                        continue
+
             digits: dict[str, int] = {}
             for logical, broker in SYMBOLS.items():
                 if not mt5.symbol_select(broker, True):
@@ -464,6 +489,7 @@ class MT5Manager:
                 return False
 
             self.digits = digits
+            DEFAULT_DIGITS.update({k: int(v) for k, v in digits.items() if int(v) > 0})
             self.account = {
                 "login": int(account.login),
                 "server": account.server,
@@ -1749,6 +1775,36 @@ async def api_delete_alert(alert_id: str) -> dict:
             logger.info("Alert o'chirildi: id=%s", alert_id)
             return {"deleted": True}
     raise HTTPException(status_code=404, detail=f"Alert topilmadi: {alert_id}")
+
+
+# -- MT5 savdo (server/trade.py) --------------------------------------------
+# REST: /api/trade/state, /account, /login, /logout, /order, /close, /modify,
+#       /cancel, /flat, /history
+# Rejim: XAUVIEW_TRADE (0=o'chirilgan), XAUVIEW_TRADE_MOCK=1 (paper trading).
+# Router static mount'dan OLDIN qo'shilishi shart (mount "/" hamma yo'lni oladi).
+try:
+    import trade as trade_engine
+
+    trade_engine.configure(
+        mt5=mt5,
+        mt5_wait=mt5_wait,
+        symbols=SYMBOLS,
+        default_digits=DEFAULT_DIGITS,
+        connected=lambda: bool(manager.connected),
+        set_connected=lambda value: setattr(manager, "connected", bool(value)),
+        reconnect=manager.connect,
+        price_provider=current_tick,
+    )
+    trade_engine.install(app)
+    logger.info(
+        "Savdo API: mode=%s (XAUVIEW_TRADE=%s, XAUVIEW_TRADE_MOCK=%s)",
+        trade_engine.current_mode(),
+        os.getenv("XAUVIEW_TRADE", "1"),
+        os.getenv("XAUVIEW_TRADE_MOCK", "0") or "0",
+    )
+except Exception as _trade_exc:  # savdo moduli buzilsa ham feed server o'lmaydi
+    trade_engine = None
+    logger.exception("server/trade.py yuklanmadi - savdo API o'chirilgan: %r", _trade_exc)
 
 
 # -- statik hosting ---------------------------------------------------------

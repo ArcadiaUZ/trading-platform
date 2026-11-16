@@ -23,3 +23,9 @@ services:
         value: "15"
       - key: PYTHONUNBUFFERED
         value: "1"
+      # Savdo: Render'da MT5 yo'q -> paper (mock) rejim. Haqiqiy savdo faqat
+      # Windows serverda (MT5 terminal ochiq) ishlaydi.
+      - key: XAUVIEW_TRADE
+        value: "1"
+      - key: XAUVIEW_TRADE_MOCK
+        value: "1"
