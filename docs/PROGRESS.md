@@ -440,3 +440,27 @@ Brauzer **o'zi** internetdan narx oladi (CORS ruxsat berilgan manbalar, API kali
 - PAXG fyuchers emas, spot token: narx ~0.1-0.4% farq qilishi mumkin (normallashtirilgan).
 - Yahoo/stooq brauzerdan CORS bermaydi -> ular faqat server manbasi sifatida qoladi.
 - GBPUSD intraday uchun bepul CORS manba yo'q -> TwelveData kaliti yoki server.
+
+## 15. v8 sessiya — Gesture deep RE (TradingView 1.20.87) + Render deploy
+
+### 15.1 RE natijalari (dalil bilan)
+- APK: `work/apk/base.apk`, 8 dex (81.5 MB) → chart **WebView** ichida, gesture'lar `charting library` JS bundle'ida.
+- Bundle: `static.tradingview.com/static/bundles/81242.a1188b25dfed57604d8f.js` (1.42 MB) → `pinch=55, kinetic, touchend=30`.
+- Topilgan formula: `zoomTime(e.x, 10*(s - sPrev))` — pinch **faqat vaqt** zoom, 10× inkremental gain.
+- Price axis pinch: `startTwoPointsScalePrice(t.y, i.y)` / `twoPointsScalePriceTo(...)`.
+- Kinetic: `useKineticScroll = isAnyMobile`; `addStart`: `t - timeStamp <= 50 ms`; sample faqat `|dx| >= 15 px`; `_moveSampleCount >= 2`.
+- `handleScroll: {horzTouchDrag, vertTouchDrag}`, `handleScale: {pinch, axisPressedMouseMove:{time,price}}`.
+- Crosshair track faqat long-tap'dan keyin (`_trackCrosshairOnlyAfterLongTap`).
+- To'liq hujjat: **`docs/TV-GESTURES.md`** (kod parchalari + jadval + cheklovlar).
+
+### 15.2 Yangi modul: `mobile/src/_m13_gestures.js`
+- Document **capture** fazali listener'lar (eski handlerlardan oldin) — eski pinch mantiqi neytrallanadi.
+- **Kinetic fling**: TV shartlari (50 ms gate, 15 px sample, ≥2 sample) + `exp(-dt/210)` so'nish.
+- **Pinch**: chartda `1 + 10*Δs` (vaqt, markazga tayanadi), price axis'da `range *= sPrev/s`.
+- **Double-tap** price axis → avto-scale; time axis → fit. Haptika: pinch 6 ms, fling 8 ms, dbl-tap 12 ms.
+- `window.GEST.stats` — test uchun hisoblagichlar.
+
+### 15.3 Test (`mobile/_t_gestures.js`, CDP multi-touch): **8/8 PASS**, 0 JS xato
+Gorizontal pinch → vaqt zoom ✓ · chart pinch narxni tegmaydi ✓ · vertikal pinch e'tiborsiz ✓ ·
+price-axis pinch → narx scale ✓ · fling 20→42→58→72→77 ✓ · long-press drag → fling yo'q ✓ ·
+dbl-tap price axis → autoPrice ✓.

@@ -31,7 +31,25 @@ from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Optional
 
-import MetaTrader5 as mt5
+# --- Ma'lumot manbasi: XAUVIEW_DATA=auto|mt5|open ---------------------------
+#   auto -> MT5 bo'lsa MT5, aks holda open provayderlar (default)
+#   mt5  -> MT5 afzal (modul yo'q bo'lsa ham open'ga tushadi)
+#   open -> MT5 umuman ishlatilmaydi (Render/Linux uchun)
+# MetaTrader5 faqat Windows'da mavjud: Render (Linux) uchun import yutiladi.
+DATA_MODE = (os.getenv("XAUVIEW_DATA", "auto") or "auto").strip().lower()
+if DATA_MODE not in ("auto", "mt5", "open"):
+    DATA_MODE = "auto"
+
+MT5_IMPORT_ERROR: Optional[str] = None
+try:
+    import MetaTrader5 as mt5
+except Exception as _mt5_exc:  # ImportError (Linux) yoki boshqa xato
+    mt5 = None
+    MT5_IMPORT_ERROR = f"{type(_mt5_exc).__name__}: {_mt5_exc}"
+
+MT5_WANTED = DATA_MODE in ("auto", "mt5")
+MT5_ENABLED = bool(mt5 is not None and MT5_WANTED)
+
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, PlainTextResponse
@@ -48,7 +66,8 @@ ALERTS_FILE = BASE_DIR / "alerts.json"
 LOG_FILE = BASE_DIR / "server.log"
 
 HOST = os.getenv("FEED_HOST", "0.0.0.0")
-PORT = int(os.getenv("FEED_PORT", "8765"))
+# Render PORT beradi; lokal ishda FEED_PORT (default 8765) ishlatiladi.
+PORT = int(os.getenv("FEED_PORT", os.getenv("PORT", "8765")))
 
 # logik symbol -> broker symbol
 SYMBOLS: dict[str, str] = {
@@ -57,14 +76,23 @@ SYMBOLS: dict[str, str] = {
 }
 DEFAULT_DIGITS: dict[str, int] = {"XAUUSD": 3, "GBPUSD": 5}
 
+def _mt5_const(name: str, fallback: int) -> int:
+    """MT5 konstantasi; modul yo'q bo'lsa fallback (real MT5 qiymatlari)."""
+    value = getattr(mt5, name, None) if mt5 is not None else None
+    try:
+        return int(value) if value is not None else fallback
+    except (TypeError, ValueError):
+        return fallback
+
+
 TF_VALUES: dict[str, int] = {
-    "D1": mt5.TIMEFRAME_D1,
-    "H4": mt5.TIMEFRAME_H4,
-    "H1": mt5.TIMEFRAME_H1,
-    "M15": mt5.TIMEFRAME_M15,
-    "M5": mt5.TIMEFRAME_M5,
-    "M3": mt5.TIMEFRAME_M3,
-    "M1": mt5.TIMEFRAME_M1,
+    "D1": _mt5_const("TIMEFRAME_D1", 16408),
+    "H4": _mt5_const("TIMEFRAME_H4", 16388),
+    "H1": _mt5_const("TIMEFRAME_H1", 16385),
+    "M15": _mt5_const("TIMEFRAME_M15", 15),
+    "M5": _mt5_const("TIMEFRAME_M5", 5),
+    "M3": _mt5_const("TIMEFRAME_M3", 3),
+    "M1": _mt5_const("TIMEFRAME_M1", 1),
 }
 TF_SECONDS: dict[str, int] = {
     "D1": 86400, "H4": 14400, "H1": 3600,
@@ -93,6 +121,8 @@ MAX_CANDLES = 5000
 MAX_WS_CLIENTS = 64
 VERSION = "1.0.0"
 OPEN_STALE_S = 60.0            # OPEN fallback: MT5 data shu vaqtdan eski bo'lsa almashtiriladi
+# OPEN manba so'rov oralig'i (Render free: egress/CPU tejash uchun oshiriladi)
+OPEN_POLL_S = float(os.getenv("XAUVIEW_OPEN_POLL_S", "2.0"))
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -130,6 +160,15 @@ try:
 except Exception as _open_exc:  # pragma: no cover
     OPEN = None
     logger.warning("providers_open import qilinmadi (open fallback o'chiq): %r", _open_exc)
+
+if MT5_ENABLED:
+    logger.info("Data mode: %s (MetaTrader5 faol)", DATA_MODE)
+else:
+    logger.warning(
+        "Data mode: %s - MT5 O'CHIRILGAN (sabab: %s). Open provayderlar ishlatiladi.",
+        DATA_MODE,
+        MT5_IMPORT_ERROR or "XAUVIEW_DATA=open",
+    )
 
 # ---------------------------------------------------------------------------
 # Yordamchi funksiyalar
@@ -227,6 +266,8 @@ def rate_to_bar(rate: Any, digits: int) -> list:
 
 def fetch_bars_sync(broker: str, tf_value: int, count: int, digits: int) -> Optional[list]:
     """MT5'dan bar o'qish. None -> MT5 xato; [] -> bar yo'q."""
+    if not MT5_ENABLED:
+        return None
     try:
         rates = mt5.copy_rates_from_pos(broker, tf_value, 0, count)
     except Exception:
@@ -241,6 +282,8 @@ def fetch_bars_sync(broker: str, tf_value: int, count: int, digits: int) -> Opti
 
 
 async def bars_for(broker: str, tf_value: int, count: int, digits: int) -> Optional[list]:
+    if not MT5_ENABLED:
+        return None
     bars = await mt5_wait(fetch_bars_sync, broker, tf_value, count, digits, timeout=15.0)
     if bars is None:
         await manager.ensure()
@@ -326,7 +369,7 @@ async def open_feed_loop() -> None:
                 }
         except Exception:
             logger.debug("open_feed_loop xatosi", exc_info=True)
-        await asyncio.sleep(2.0)
+        await asyncio.sleep(max(0.5, OPEN_POLL_S))
 
 
 # ---------------------------------------------------------------------------
@@ -362,6 +405,14 @@ class TickStore:
 TICKS = TickStore()
 
 
+def current_tick(symbol: str) -> Optional[dict]:
+    """MT5 tick bo'lmasa (Render/Linux) OPEN manbadan olingan oxirgi narx."""
+    tick = TICKS.get(symbol)
+    if tick is not None:
+        return tick
+    return OPEN_TICKS.get(symbol)
+
+
 # ---------------------------------------------------------------------------
 # MT5 ulanish menejeri
 # ---------------------------------------------------------------------------
@@ -376,6 +427,8 @@ class MT5Manager:
     # -- sync qism (executor thread) ---------------------------------------
     def _connect_sync(self) -> bool:
         self._last_connect_attempt = time.monotonic()
+        if not MT5_ENABLED:
+            return False
         try:
             ok = mt5.initialize()
             if not ok:
@@ -426,6 +479,8 @@ class MT5Manager:
             return False
 
     def _health_sync(self) -> bool:
+        if not MT5_ENABLED:
+            return False
         try:
             terminal = mt5.terminal_info()
             if terminal is None or not getattr(terminal, "connected", False):
@@ -436,6 +491,8 @@ class MT5Manager:
             return False
 
     def _shutdown_sync(self) -> None:
+        if mt5 is None:
+            return
         try:
             mt5.shutdown()
         except Exception:
@@ -443,6 +500,8 @@ class MT5Manager:
 
     # -- async qism --------------------------------------------------------
     async def connect(self) -> bool:
+        if not MT5_ENABLED:
+            return False
         if self.connected:
             return True
         ok = bool(await mt5_wait(self._connect_sync, timeout=30.0))
@@ -456,6 +515,8 @@ class MT5Manager:
         return await self.connect()
 
     async def loop(self) -> None:
+        if not MT5_ENABLED:
+            return
         backoff = 1.0
         while not self._stop:
             if self.connected:
@@ -471,6 +532,8 @@ class MT5Manager:
             backoff = min(backoff * 2.0, 30.0)
 
     async def watchdog(self) -> None:
+        if not MT5_ENABLED:
+            return
         while not self._stop:
             await asyncio.sleep(5.0)
             if not self.connected:
@@ -486,6 +549,8 @@ class MT5Manager:
 
     async def poll_ticks(self) -> None:
         """symbol_info_tick ma'lumotlarini cache'ga yig'adi."""
+        if not MT5_ENABLED:
+            return
         failures = {symbol: 0 for symbol in SYMBOLS}
         while not self._stop:
             started = time.monotonic()
@@ -745,16 +810,23 @@ async def get_asia_range(symbol: str, day_str: str) -> Optional[dict]:
         return None
     broker = SYMBOLS[symbol]
     digits = _alert_digits(symbol)
-    for tf_value, tf_name in ((mt5.TIMEFRAME_M15, "M15"), (mt5.TIMEFRAME_H1, "H1")):
-        rates = await mt5_wait(
-            mt5.copy_rates_range, broker, tf_value,
-            datetime.fromtimestamp(start_ts, timezone.utc),
-            datetime.fromtimestamp(end_ts, timezone.utc),
-            timeout=15.0,
-        )
-        if rates is None or len(rates) == 0:
+    for tf_name in ("M15", "H1"):
+        bars: Optional[list] = None
+        if MT5_ENABLED:
+            rates = await mt5_wait(
+                mt5.copy_rates_range, broker, TF_VALUES[tf_name],
+                datetime.fromtimestamp(start_ts, timezone.utc),
+                datetime.fromtimestamp(end_ts, timezone.utc),
+                timeout=15.0,
+            )
+            if rates is not None and len(rates) > 0:
+                bars = [rate_to_bar(rate, digits) for rate in rates]
+        if not bars:
+            # Render/Linux: MT5 yo'q -> open provayderdan M15/H1 barlar
+            fallback = await open_bars_or_none(symbol, tf_name, 500)
+            bars = (fallback or {}).get("bars") or None
+        if not bars:
             continue
-        bars = [rate_to_bar(rate, digits) for rate in rates]
         rng = asia_range_from_bars(bars, start_ts, end_ts, digits)
         if rng is not None:
             rng["source"] = tf_name
@@ -798,7 +870,7 @@ async def prepare_alert(alert: dict) -> None:
 
 
 def _current_price(symbol: str) -> Optional[float]:
-    tick = TICKS.get(symbol)
+    tick = current_tick(symbol)
     return float(tick["price"]) if tick else None
 
 
@@ -961,8 +1033,14 @@ class BarState:
         return bars
 
     async def refresh(self, count: int = 3) -> bool:
-        """Oxirgi barlarni MT5'dan qayta o'qib tuzatadi. True -> yangi bar boshlangan."""
+        """Oxirgi barlarni qayta o'qib tuzatadi. True -> yangi bar boshlangan.
+
+        MT5 bo'lmasa (Render/Linux) open provayderdan o'qiladi.
+        """
         bars = await bars_for(self.broker, self.tf_value, count, self.digits)
+        if not bars:
+            fallback = await open_bars_or_none(self.symbol, self.tf, count)
+            bars = (fallback or {}).get("bars") or None
         if not bars:
             return False
         last = bars[-1]
@@ -1035,7 +1113,7 @@ class BarState:
 # Alert baholash (price / zone / sweep / session)
 # ---------------------------------------------------------------------------
 async def eval_price(alert: dict, now: float) -> None:
-    tick = TICKS.get(alert["symbol"])
+    tick = current_tick(alert["symbol"])
     if tick is None:
         return
     price = float(tick["price"])
@@ -1052,7 +1130,7 @@ async def eval_price(alert: dict, now: float) -> None:
 
 
 async def eval_zone(alert: dict, now: float) -> None:
-    tick = TICKS.get(alert["symbol"])
+    tick = current_tick(alert["symbol"])
     if tick is None:
         return
     price = float(tick["price"])
@@ -1108,7 +1186,10 @@ async def eval_sweep(alert: dict, now: float) -> None:
         state["last_bar_ts"] = current_bar_ts - 60
         last_bar_ts = state["last_bar_ts"]
     need = int(min(500, max(3, (current_bar_ts - last_bar_ts) // 60 + 2)))
-    bars = await bars_for(SYMBOLS[symbol], mt5.TIMEFRAME_M1, need, digits)
+    bars = await bars_for(SYMBOLS[symbol], TF_VALUES["M1"], need, digits)
+    if not bars:
+        fallback = await open_bars_or_none(symbol, "M1", need)
+        bars = (fallback or {}).get("bars") or None
     if not bars:
         return
     closed = [bar for bar in bars if bar[0] + 60 <= now_ts and bar[0] > last_bar_ts]
@@ -1330,22 +1411,28 @@ async def lifespan(app: FastAPI):
     logger.info("Feed server ishga tushmoqda (versiya %s, port %s)", VERSION, PORT)
 
     connected = False
-    for attempt in range(1, 4):
-        connected = await manager.connect()
-        if connected:
-            break
-        logger.warning("MT5 ulanish urinishi %d/3 muvaffaqiyatsiz", attempt)
-        await asyncio.sleep(1.0)
-    if not connected:
-        logger.error("MT5 hozircha ulanmadi - fonda qayta urinish davom etadi")
+    if MT5_ENABLED:
+        for attempt in range(1, 4):
+            connected = await manager.connect()
+            if connected:
+                break
+            logger.warning("MT5 ulanish urinishi %d/3 muvaffaqiyatsiz", attempt)
+            await asyncio.sleep(1.0)
+        if not connected:
+            logger.error("MT5 hozircha ulanmadi - fonda qayta urinish davom etadi")
+    else:
+        logger.warning("MT5 o'chiq (XAUVIEW_DATA=%s) - faqat open provayderlar ishlaydi", DATA_MODE)
 
     tasks = [
-        asyncio.create_task(manager.loop(), name="mt5-loop"),
-        asyncio.create_task(manager.watchdog(), name="mt5-watchdog"),
-        asyncio.create_task(manager.poll_ticks(), name="mt5-ticks"),
         asyncio.create_task(alert_loop(), name="alert-loop"),
         asyncio.create_task(open_feed_loop(), name="open-feed"),
     ]
+    if MT5_ENABLED:
+        tasks += [
+            asyncio.create_task(manager.loop(), name="mt5-loop"),
+            asyncio.create_task(manager.watchdog(), name="mt5-watchdog"),
+            asyncio.create_task(manager.poll_ticks(), name="mt5-ticks"),
+        ]
 
     local_ip = lan_ip()
     logger.info("Mahalliy: http://127.0.0.1:%s", PORT)
@@ -1526,6 +1613,9 @@ async def api_health() -> dict:
     return {
         "ok": True,
         "mt5": bool(manager.connected),
+        "data_mode": DATA_MODE,
+        "mt5_available": mt5 is not None,
+        "open_available": OPEN is not None,
         "symbols": list(SYMBOLS.keys()),
         "time": int(time.time()),
         "digits": {
@@ -1552,6 +1642,8 @@ async def api_providers() -> dict:
             "note": "open data, no API key (providers_open.py yuklanmadi)",
         }
     status = OPEN.status_json()
+    status["data_mode"] = DATA_MODE
+    status["mt5_available"] = mt5 is not None
     # MT5 sog'lom bo'lsa u har doim aktiv (open manba faqat zaxira)
     if manager.connected and all(mt5_fresh(symbol) for symbol in SYMBOLS):
         status["active"] = "mt5"

@@ -1,0 +1,25 @@
+# Render.com Blueprint - XAUView feed server (FREE plan, 24/7).
+# Repo root'da turadi. Render Dashboard -> New -> Blueprint -> repo tanlang.
+# Free instance 15 daqiqa harakatsizlikdan keyin uxlaydi -> .github/workflows/keepalive.yml
+# har 10 daqiqada /api/health ni uradi (750 h/oy limitiga sig'adi: 730 h kerak).
+services:
+  - type: web
+    name: xauview
+    runtime: docker
+    plan: free
+    region: frankfurt
+    branch: master
+    dockerfilePath: ./server/Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      # Render'da MetaTrader5 yo'q -> faqat open provayderlar (yahoo/stooq/goldapi)
+      - key: XAUVIEW_DATA
+        value: open
+      # OPEN narx so'rovi oralig'i (sek). 15 s -> ~20 GB/oy egress;
+      # 30 s -> ~10 GB/oy (free: 100 GB/oy). Narx shunga mos yangilanadi.
+      - key: XAUVIEW_OPEN_POLL_S
+        value: "15"
+      - key: PYTHONUNBUFFERED
+        value: "1"

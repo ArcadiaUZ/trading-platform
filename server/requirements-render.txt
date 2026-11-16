@@ -1,0 +1,12 @@
+# XAUView feed server - Render (Linux) uchun ANIQ pip ro'yxati.
+#
+# BU YERDA YO'Q (ataylab):
+#   MetaTrader5    -> faqat Windows'da mavjud, Render Linux'da o'rnatib bo'lmaydi
+#   pandas/numpy   -> server/app.py ularni import qilmaydi
+#   httpx/requests -> server/providers_open.py faqat stdlib urllib ishlatadi
+#
+# Versiyalar lokal venv'da tekshirilgan (fastapi 0.163.1 / uvicorn 0.54.0 /
+# websockets 17.4). Agar Render build'da versiya topilmasa - pin'ni olib tashlang.
+fastapi==0.163.1
+uvicorn[standard]==0.54.0
+websockets==17.4
