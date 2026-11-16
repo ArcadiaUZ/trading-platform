@@ -1,0 +1,637 @@
+{
+ "source": {
+  "xapk": "D:\\Project\\AI\\Trading-with-ai\\tradingview-1-20-87-0-1002595.xapk",
+  "apk": "com.tradingview.tradingviewapp.apk",
+  "version": "1.20.87.0 (versionCode 1002595)",
+  "decoded_from": "resources.arsc + res/drawable/**/*.xml (binary AXML VectorDrawable)"
+ },
+ "rendered_px": 112,
+ "note": "PNG 112px = 28dp icon @4x (xxxhdpi). Fill rang = dsColorPaletteText (dark tema #DBDBDB).",
+ "count": 124,
+ "icons": {
+  "ic_abcd_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_abcd_drawings.svg"
+  },
+  "ic_anchor_text_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_anchor_text_drawings.svg"
+  },
+  "ic_anchored_avwap_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_anchored_avwap_drawings.svg"
+  },
+  "ic_arc_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_arc_drawings.svg"
+  },
+  "ic_arrow_down_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_arrow_down_drawings.svg"
+  },
+  "ic_arrow_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_arrow_drawings.svg"
+  },
+  "ic_arrow_marker_down_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_arrow_marker_down_drawings.svg"
+  },
+  "ic_arrow_marker_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_arrow_marker_drawings.svg"
+  },
+  "ic_arrow_marker_up_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_arrow_marker_up_drawings.svg"
+  },
+  "ic_bars_pattern_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_bars_pattern_drawings.svg"
+  },
+  "ic_callout_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_callout_drawings.svg"
+  },
+  "ic_chart_context_menu_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_chart_context_menu_drawings.svg"
+  },
+  "ic_comment_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_comment_drawings.svg"
+  },
+  "ic_cross_line_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_cross_line_drawings.svg"
+  },
+  "ic_curve_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_curve_drawings.svg"
+  },
+  "ic_cyclic_lines_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_cyclic_lines_drawings.svg"
+  },
+  "ic_cypher_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_cypher_drawings.svg"
+  },
+  "ic_date_and_price_range_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_date_and_price_range_drawings.svg"
+  },
+  "ic_date_range_drawing_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_date_range_drawing_drawings.svg"
+  },
+  "ic_disjoint_angle_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_disjoint_angle_drawings.svg"
+  },
+  "ic_double_curve_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_double_curve_drawings.svg"
+  },
+  "ic_drawing_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_drawing_drawings.svg"
+  },
+  "ic_drawing_locked_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_drawing_locked_drawings.svg"
+  },
+  "ic_eliott_correction_wave_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_eliott_correction_wave_drawings.svg"
+  },
+  "ic_eliott_double_combo_wave_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_eliott_double_combo_wave_drawings.svg"
+  },
+  "ic_eliott_impulse_wave_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_eliott_impulse_wave_drawings.svg"
+  },
+  "ic_eliott_triangle_wave_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_eliott_triangle_wave_drawings.svg"
+  },
+  "ic_eliott_triple_combo_wave_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_eliott_triple_combo_wave_drawings.svg"
+  },
+  "ic_elipse_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_elipse_drawings.svg"
+  },
+  "ic_eraser_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_eraser_drawings.svg"
+  },
+  "ic_extended_line_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_extended_line_drawings.svg"
+  },
+  "ic_fib_channel_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_fib_channel_drawings.svg"
+  },
+  "ic_fib_circles_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_fib_circles_drawings.svg"
+  },
+  "ic_fib_retracement_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_fib_retracement_drawings.svg"
+  },
+  "ic_fib_speed_resistance_arcs_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_fib_speed_resistance_arcs_drawings.svg"
+  },
+  "ic_fib_speed_resistance_fan_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_fib_speed_resistance_fan_drawings.svg"
+  },
+  "ic_fib_spiral_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_fib_spiral_drawings.svg"
+  },
+  "ic_fib_time_zone_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_fib_time_zone_drawings.svg"
+  },
+  "ic_fib_wedge_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_fib_wedge_drawings.svg"
+  },
+  "ic_fixed_range_volume_profile_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_fixed_range_volume_profile_drawings.svg"
+  },
+  "ic_flag_mark_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_flag_mark_drawings.svg"
+  },
+  "ic_flat_top_bottom_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_flat_top_bottom_drawings.svg"
+  },
+  "ic_forecast_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_forecast_drawings.svg"
+  },
+  "ic_gann_box_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_gann_box_drawings.svg"
+  },
+  "ic_gann_fan_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_gann_fan_drawings.svg"
+  },
+  "ic_gann_square_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_gann_square_drawings.svg"
+  },
+  "ic_gann_square_fixed_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_gann_square_fixed_drawings.svg"
+  },
+  "ic_ghost_feed_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_ghost_feed_drawings.svg"
+  },
+  "ic_head_and_shoulders_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_head_and_shoulders_drawings.svg"
+  },
+  "ic_highlighter_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_highlighter_drawings.svg"
+  },
+  "ic_horizontal_line_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_horizontal_line_drawings.svg"
+  },
+  "ic_horizontal_ray_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_horizontal_ray_drawings.svg"
+  },
+  "ic_info_line_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_info_line_drawings.svg"
+  },
+  "ic_inside_pitchfork_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_inside_pitchfork_drawings.svg"
+  },
+  "ic_long_position_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_long_position_drawings.svg"
+  },
+  "ic_measure_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_measure_drawings.svg"
+  },
+  "ic_modified_schiff_pitchfork_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_modified_schiff_pitchfork_drawings.svg"
+  },
+  "ic_note_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_note_drawings.svg"
+  },
+  "ic_parallel_channel_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_parallel_channel_drawings.svg"
+  },
+  "ic_path_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_path_drawings.svg"
+  },
+  "ic_pin_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_pin_drawings.svg"
+  },
+  "ic_pitchfan_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_pitchfan_drawings.svg"
+  },
+  "ic_pitchfork_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_pitchfork_drawings.svg"
+  },
+  "ic_polyline_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_polyline_drawings.svg"
+  },
+  "ic_price_label_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_price_label_drawings.svg"
+  },
+  "ic_price_note_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_price_note_drawings.svg"
+  },
+  "ic_price_range_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_price_range_drawings.svg"
+  },
+  "ic_projection_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_projection_drawings.svg"
+  },
+  "ic_ray_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_ray_drawings.svg"
+  },
+  "ic_rectangle_drawing_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_rectangle_drawing_drawings.svg"
+  },
+  "ic_regression_trend_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_regression_trend_drawings.svg"
+  },
+  "ic_remove_drawings": {
+   "dominant_fill": "#000000",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_remove_drawings.svg"
+  },
+  "ic_rotated_rectangle_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_rotated_rectangle_drawings.svg"
+  },
+  "ic_schiff_pitchfork_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_schiff_pitchfork_drawings.svg"
+  },
+  "ic_short_position_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_short_position_drawings.svg"
+  },
+  "ic_signpost_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_signpost_drawings.svg"
+  },
+  "ic_sine_line_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_sine_line_drawings.svg"
+  },
+  "ic_strong_magnet_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_strong_magnet_drawings.svg"
+  },
+  "ic_table_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_table_drawings.svg"
+  },
+  "ic_text_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_text_drawings.svg"
+  },
+  "ic_three_drives_pattern_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_three_drives_pattern_drawings.svg"
+  },
+  "ic_time_cycles_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_time_cycles_drawings.svg"
+  },
+  "ic_trash_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_trash_drawings.svg"
+  },
+  "ic_trend_angle_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_trend_angle_drawings.svg"
+  },
+  "ic_trend_based_fib_extension_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_trend_based_fib_extension_drawings.svg"
+  },
+  "ic_trend_based_fib_time_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_trend_based_fib_time_drawings.svg"
+  },
+  "ic_trend_line_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_trend_line_drawings.svg"
+  },
+  "ic_triangle_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_triangle_drawings.svg"
+  },
+  "ic_triangle_pattern_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_triangle_pattern_drawings.svg"
+  },
+  "ic_tweet_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_tweet_drawings.svg"
+  },
+  "ic_unlocked_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_unlocked_drawings.svg"
+  },
+  "ic_vertical_line_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_vertical_line_drawings.svg"
+  },
+  "ic_weak_magnet_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_weak_magnet_drawings.svg"
+  },
+  "ic_xabcd_drawings": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "drawing-tool",
+   "svg": "svg/ic_xabcd_drawings.svg"
+  },
+  "ic_chart_native_panel_undo": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "ui",
+   "svg": "svg/ic_chart_native_panel_undo.svg"
+  },
+  "ic_chart_native_panel_redo": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "ui",
+   "svg": "svg/ic_chart_native_panel_redo.svg"
+  },
+  "ic_chart_native_panel_more": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "ui",
+   "svg": "svg/ic_chart_native_panel_more.svg"
+  },
+  "ic_more_dots_vertical": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "ui",
+   "svg": "svg/ic_more_dots_vertical.svg"
+  },
+  "ic_settings_chart_screen": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "ui",
+   "svg": "svg/ic_settings_chart_screen.svg"
+  },
+  "ic_fullscreen": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "ui",
+   "svg": "svg/ic_fullscreen.svg"
+  },
+  "ic_chart_context_menu_eye": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "ui",
+   "svg": "svg/ic_chart_context_menu_eye.svg"
+  },
+  "ic_chart_context_menu_lock": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "ui",
+   "svg": "svg/ic_chart_context_menu_lock.svg"
+  },
+  "ic_chart_context_menu_unlock": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "ui",
+   "svg": "svg/ic_chart_context_menu_unlock.svg"
+  },
+  "ic_chart_context_menu_trash": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "ui",
+   "svg": "svg/ic_chart_context_menu_trash.svg"
+  },
+  "ic_chart_context_menu_apply_indicator": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "ui",
+   "svg": "svg/ic_chart_context_menu_apply_indicator.svg"
+  },
+  "ic_favorite_star_28": {
+   "dominant_fill": "#000000",
+   "kind": "ui",
+   "svg": "svg/ic_favorite_star_28.svg"
+  },
+  "ic_28_search": {
+   "dominant_fill": "#000000",
+   "kind": "ui",
+   "svg": "svg/ic_28_search.svg"
+  },
+  "ic_28_close": {
+   "dominant_fill": "#000000",
+   "kind": "ui",
+   "svg": "svg/ic_28_close.svg"
+  },
+  "ic_add": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "ui",
+   "svg": "svg/ic_add.svg"
+  },
+  "ic_share_chart_image": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "ui",
+   "svg": "svg/ic_share_chart_image.svg"
+  },
+  "ic_alert_bell": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "ui",
+   "svg": "svg/ic_alert_bell.svg"
+  },
+  "ic_chart_type_candles_28": {
+   "dominant_fill": "#000000",
+   "kind": "ui",
+   "svg": "svg/ic_chart_type_candles_28.svg"
+  },
+  "ic_chart_type_bars_28": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "ui",
+   "svg": "svg/ic_chart_type_bars_28.svg"
+  },
+  "ic_chart_type_area_28": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "ui",
+   "svg": "svg/ic_chart_type_area_28.svg"
+  },
+  "ic_chart_type_baseline_28": {
+   "dominant_fill": "#000000",
+   "kind": "ui",
+   "svg": "svg/ic_chart_type_baseline_28.svg"
+  },
+  "ic_chart_type_hollow_candles_28": {
+   "dominant_fill": "#000000",
+   "kind": "ui",
+   "svg": "svg/ic_chart_type_hollow_candles_28.svg"
+  },
+  "ic_zoom_in": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "ui",
+   "svg": "svg/ic_zoom_in.svg"
+  },
+  "ic_zoom_out": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "ui",
+   "svg": "svg/ic_zoom_out.svg"
+  },
+  "ic_indicators_hidden": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "ui",
+   "svg": "svg/ic_indicators_hidden.svg"
+  },
+  "ic_indicators_shown": {
+   "dominant_fill": "#000000",
+   "kind": "ui",
+   "svg": "svg/ic_indicators_shown.svg"
+  },
+  "ic_indicator_alert": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "ui",
+   "svg": "svg/ic_indicator_alert.svg"
+  },
+  "ic_remove": {
+   "dominant_fill": "#000000",
+   "kind": "ui",
+   "svg": "svg/ic_remove.svg"
+  },
+  "ic_note": {
+   "dominant_fill": "#000000",
+   "kind": "ui",
+   "svg": "svg/ic_note.svg"
+  },
+  "ic_chart_context_menu_text_note": {
+   "dominant_fill": "#DBDBDB",
+   "kind": "ui",
+   "svg": "svg/ic_chart_context_menu_text_note.svg"
+  }
+ },
+ "failed": [
+  "ic_close",
+  "ic_pin"
+ ]
+}

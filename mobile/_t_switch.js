@@ -1,0 +1,28 @@
+const puppeteer = require('D:/Project/AI/tradelab/node_modules/puppeteer-core');
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+(async () => {
+  const b = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: 'new', args: ['--no-sandbox','--disable-gpu'] });
+  const p = await b.newPage();
+  const logs = [];
+  p.on('console', m => logs.push(m.type() + ':' + m.text().slice(0, 120)));
+  await p.setViewport({ width: 393, height: 873, deviceScaleFactor: 2, isMobile: true, hasTouch: true });
+  await p.goto('http://127.0.0.1:8765/', { waitUntil: 'load' });
+  await sleep(2500);
+  const st = async (tag) => { const s = await p.evaluate(() => ({ live: document.getElementById('live').textContent, rs: window.__M.FEED.ws ? window.__M.FEED.ws.readyState : -1, retry: window.__M.FEED.retry, gen: window.__M.FEED.gen, sym: window.__M.S.sym, tf: window.__M.S.tf, n: window.__M.ASSETS[window.__M.S.sym].tfs[window.__M.S.tf].length })); console.log(tag, JSON.stringify(s)); };
+  await st('INITIAL');
+  await p.evaluate(() => window.__M.setSym('GBPUSD'));
+  await sleep(300);
+  await st('AFTER_SYM_0.3s');
+  await sleep(2500);
+  await st('AFTER_SYM_2.8s');
+  await p.evaluate(() => window.__M.setTF('H1'));
+  await sleep(2500);
+  await st('AFTER_TF_2.5s');
+  await p.evaluate(() => window.__M.setTF('M15'));
+  await sleep(500);
+  await p.evaluate(() => window.__M.setSym('XAUUSD'));
+  await sleep(3000);
+  await st('BACK_XAU');
+  console.log('LOGS', JSON.stringify(logs.slice(-12)));
+  await b.close();
+})().catch(e => { console.log('FAIL', String(e).slice(0, 300)); process.exit(1); });

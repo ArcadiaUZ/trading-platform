@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24">
+  <path d="M10.5 8H12V3h1.5v5H15v9h-1.5v2H12v-2h-1.5V8zm-7 2H5V4h1.5v6H8v8H6.5v2H5v-2H3.5v-8zM12 9.5v6h1.5v-6H12zm-7 2v5h1.5v-5H5zM17 9h5l-2.5 3L17 9zm2.5 7c0.828 0 1.5-0.672 1.5-1.5S20.328 13 19.5 13 18 13.672 18 14.5s0.672 1.5 1.5 1.5z" fill="#DBDBDB" />
+  <path d="M20.25 2.75v6.5h-1.5v-6.5h1.5z" fill="#DBDBDB" />
+</svg>

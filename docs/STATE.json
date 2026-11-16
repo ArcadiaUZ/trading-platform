@@ -1,0 +1,133 @@
+{
+  "project": "XAUView (TradingView-uslub charting + alerts)",
+  "root": "D:\\Project\\AI\\tvclone",
+  "updated": "2026-11-16T17:35:00+05:00",
+  "phase": {
+    "P0": "done",
+    "P1": "done",
+    "P2": "done(mobile core)",
+    "P3": "in-progress(pwa/icons/long-press done)",
+    "P4": "pending(drawing groups)",
+    "P5": "dropped(replay)",
+    "P6": "not-started(no trading)"
+  },
+  "assets": {
+    "XAUUSD": {
+      "feed_label": "OANDA",
+      "broker_symbol": "XAUUSDm",
+      "digits": 3
+    },
+    "GBPUSD": {
+      "feed_label": "FXCM",
+      "broker_symbol": "GBPUSDm",
+      "digits": 5
+    }
+  },
+  "timeframes": [
+    "D1",
+    "H4",
+    "H1",
+    "M15",
+    "M5",
+    "M3",
+    "M1"
+  ],
+  "server": {
+    "url_local": "http://127.0.0.1:8765",
+    "url_lan": "http://10.149.101.17:8765",
+    "ws": "ws://<host>:8765/ws?symbol=XAUUSD&tf=M1",
+    "pid": "o'zgaruvchan (run.ps1)",
+    "start": "powershell -File D:\\Project\\AI\\tvclone\\server\\run.ps1",
+    "python": "D:\\Project\\AI\\Trading-with-ai\\.venv\\Scripts\\python.exe",
+    "endpoints": [
+      "/api/health",
+      "/api/candles?symbol&tf&count",
+      "/api/alerts (GET/POST/DELETE /{id})",
+      "/ws",
+      "/ (mobile static)"
+    ],
+    "tick_interval_s": 0.3,
+    "snapshot_bars": 600,
+    "tunnel": "https://picture-shoulder-notifications-atlas.trycloudflare.com",
+    "tunnel_note": "cloudflared quick tunnel, vaqtinchalik; URL server/tunnel-url.txt da",
+    "cloudflared_pid": 12636
+  },
+  "fronts": {
+    "desktop_demo": "demo/xauview-demo.html",
+    "mobile_app": "mobile/index.html",
+    "build_cmds": [
+      "node demo/src/assemble.js",
+      "node mobile/src/assemble.js"
+    ]
+  },
+  "design_tokens": "docs/DESIGN-TOKENS.md",
+  "icons": "assets/apk-icons/ (124 svg+png, sheet.png)",
+  "verified_tests": [
+    "WS ticks 0.3s (5 tick probe, XAUUSD M1 + GBPUSD M15)",
+    "snapshot 600 bars, live bar H/L/C update",
+    "symbol/TF switch reconnect (generation guard)",
+    "alert E2E: POST -> trigger -> WS alert -> toast",
+    "mobile gestures: tap/pan/pinch/double-tap/draw rect (CDP touch)",
+    "no JS errors in assembled bundles",
+    "mobil APK ikonkalar: bottom 5 / top 3 / sheet 9 (PASS)",
+    "long-press lupa + drag-while-held (CDP touch, PASS)",
+    "pan/tap regressiya (PASS)",
+    "desktop demo black default (theme=app, bg #000000)",
+    "PWA: isSecureContext + SW registratsiya (localhost, PASS)",
+    "fib + measure chizish (CDP drag, PASS)",
+    "alert 4 tur UI + POST 200 (E2E, PASS)",
+    "http + https smoke: LIVE, SW 1, 0 JS xato (PASS)",
+    "chart turlari 5 ta + persistence (PASS)",
+    "zone on_cross: armed vs triggered (PASS)",
+    "sweep range POST dan keyin darhol (PASS)",
+    "session killzone target 11:30 (PASS)",
+    "ray/arrow chizish (PASS)",
+    "start-all.ps1 (PASS)",
+    "zone on_cross UI (PASS)",
+    "mobil to'liq regressiya 12/12 PASS (tap/pan/pinch/long-press/dbl-tap/draw/chart types/sheets/switch)",
+    "desktop demo: 14 asbob rail, fib chizish, black default, 0 JS xato (Lead tekshirdi)",
+    "https tunnel health + index 200 (tunnel ok=True)"
+  ],
+  "open_decisions": [
+    "OANDA v20 / FXCM API keys — real feed kerakmi yoki MT5 yetarlimi",
+    "HTTPS tunnel (cloudflared) — telefon bildirishnomasi uchun",
+    "desktop demo default temasi: black (app) ga o'tkazish",
+    "long-press gesture + APK ikonkalarini qo'llash"
+  ],
+  "pending": [
+    "OANDA v20 / FXCM real feed adapter (API kalit kutilmoqda)",
+    "brush / highlighter / parallel channel (multi-point chizmalar)",
+    "per-item rang/qalinlik UI (chizma sozlamalari)",
+    "telefonda notification sinovi (https tunnel orqali, user tomonidan)",
+    "git init + GitHub push (tvclone)",
+    "server + tunnel autostart (skript tayyor, faqat bir marta o'rnatish kerak)"
+  ],
+  "teammates": {
+    "design-scout": "done",
+    "feed-server": "alert turlari ustida (resume qilindi)",
+    "pwa-tunnel": "PWA/tunnel testlari + docs"
+  },
+  "mobile": {
+    "icons": "APK ikonkalari (32 ta inline SVG) — bottom bar, top bar, Asboblar sheet",
+    "long_press": "380ms -> crosshair lock + lupa (r=58, zoom=2.6) + vibrate",
+    "pwa": "manifest + sw.js + _m6_pwa.js (SW registratsiya, __PWA.notify)",
+    "notifications": "Android Chrome uchun SW showNotification; https yoki localhost talab",
+    "alerts": "4 tur + zone on_cross (faqat kirish paytida) + repeat",
+    "drawings": "trendline, hline, vline, rect, text, fib retracement, measure, ray, arrow",
+    "chartTypes": "candles / hollow / bars / line / area (_m8_charttype.js, localStorage)"
+  },
+  "desktop_demo": {
+    "default_theme": "app (o'lchangan black)",
+    "drawings": "trendline, ray, hline, vline, rect, fib, measure, daterange, text, magnet",
+    "shortcuts": "F=fib, M=measure, D=daterange",
+    "tests": "22/22 parity + 10/10 regressiya PASS (demo-parity)"
+  },
+  "tunnel_url": "https://picture-shoulder-notifications-atlas.trycloudflare.com",
+  "server_alerts": "zone / sweep (Asia range darhol) / session (London 11:30, NY 16:30) — tekshirildi",
+  "scripts": {
+    "start_all": "server/start-all.ps1",
+    "tunnel_watch": "server/tunnel-watch.ps1",
+    "autostart": "server/install-autostart.ps1",
+    "runbook": "docs/RUNBOOK.md"
+  }
+}

@@ -1,0 +1,23 @@
+# build/scratch
+work/
+node_modules/
+__pycache__/
+*.pyc
+
+# binaries / tooling
+*.exe
+*.xapk
+*.apk
+server/PID.txt
+server/*.log
+server/tunnel-url.txt
+
+# local env
+.venv/
+venv/
+*.local
+.env
+
+# OS
+Thumbs.db
+.DS_Store
