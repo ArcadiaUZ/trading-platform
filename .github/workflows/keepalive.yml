@@ -3,9 +3,8 @@ name: Render keep-alive
 # Render FREE instance 15 daqiqa harakatsizlikdan keyin uxlaydi.
 # Bu workflow har 10 daqiqada /api/health ni uradi -> instance uyg'oq qoladi.
 #
-# Sozlash (bir marta):
-#   GitHub repo -> Settings -> Secrets and variables -> Actions
-#   -> New repository secret:  RENDER_URL = https://<app>.onrender.com
+# URL: xauview.onrender.com standart qiymat sifatida yozilgan (setup kerak emas).
+# Boshqa URL kerak bo'lsa: repo secret RENDER_URL ni o'zgartiring.
 #
 # Eslatma: GitHub schedule ba'zan 5-15 daqiqaga kechikadi; baribir 15 daqiqalik
 # uyqu oynasidan oldin urinadi. Qo'shimcha kafolat uchun UptimeRobot (5 daqiqa)
@@ -30,7 +29,7 @@ jobs:
     steps:
       - name: Render /api/health ni urish
         env:
-          RENDER_URL: ${{ secrets.RENDER_URL }}
+          RENDER_URL: ${{ secrets.RENDER_URL || 'https://xauview.onrender.com' }}
         run: |
           set -euo pipefail
           if [ -z "${RENDER_URL:-}" ]; then
