@@ -41,14 +41,14 @@ Qaysi biri ishlayotgani: `GET /api/providers` (`active`, `last_err`).
 
 Repo hozir lokal `master` branchda, remote hali yo'q:
 
-`
+```
 cd D:\Project\AI\tvclone
 git add -A
 git commit -m "Render deploy: Docker, open data, keepalive"
 # GitHub'da bo'sh repo yarating (private bo'lsa ham bo'ladi)
 git remote add origin https://github.com/<user>/<repo>.git
 git push -u origin master
-`
+```
 
 `.gitignore` `work/`, venv, `*.apk` va loglarni chiqarib tashlaydi — push kichik bo'ladi.
 
@@ -77,10 +77,10 @@ Agar qo'lda kiritish kerak bo'lsa — Service -> **Environment**:
 
 Deploy logida quyidagilar ko'rinadi:
 
-`
+```
 Data mode: open - MT5 O'CHIRILGAN ... Open provayderlar ishlatiladi.
 Uvicorn running on http://0.0.0.0:10000
-`
+```
 
 Tayyor manzil (Render beradi):
 
@@ -91,10 +91,10 @@ Tayyor manzil (Render beradi):
 
 Health javobi (Render'da `mt5` doim `false` — bu **normal**):
 
-`json
+```json
 {"ok": true, "mt5": false, "data_mode": "open", "mt5_available": false,
  "open_available": true, "symbols": ["XAUUSD", "GBPUSD"], "version": "1.0.0"}
-`
+```
 
 ### 3.5. Keep-alive secret (uyquga ketmasin)
 
@@ -110,26 +110,26 @@ Workflow har 10 daqiqada `/api/health` ni uradi (90 s timeout, 3 urinish).
 
 Lokal (Linux + MT5'siz simulyatsiya, 8766-port, mavjud 8765 serverga tegmaydi):
 
-`
+```
 cd D:\Project\AI\tvclone\server
 D:\Project\AI\Trading-with-ai\.venv\Scripts\python.exe test_render_local.py
-`
+```
 
 Kutilgan natija: `JAMI: 24/24 PASS` (quyida bugungi natija).
 
 Masofadagi (deploy bo'lgan) serverni tekshirish:
 
-`
+```
 python test_render_local.py --url https://xauview.onrender.com
-`
+```
 
 Qo'lda tezkor tekshiruv:
 
-`
+```
 curl https://xauview.onrender.com/api/health
 curl "https://xauview.onrender.com/api/candles?symbol=XAUUSD&tf=M1&count=60"
 curl https://xauview.onrender.com/api/providers
-`
+```
 
 ## 4. Free plan cheklovlari
 
@@ -157,9 +157,9 @@ curl https://xauview.onrender.com/api/providers
 
 ## 6. WebSocket ulanish
 
-`
+```
 wss://xauview.onrender.com/ws?symbol=XAUUSD&tf=M1
-`
+```
 
 - `symbol`: `XAUUSD`, `GBPUSD`
 - `tf`: `M1`, `M3`, `M5`, `M15`, `H1`, `H4`, `D1`
@@ -168,18 +168,18 @@ wss://xauview.onrender.com/ws?symbol=XAUUSD&tf=M1
 
 Brauzerda (JS):
 
-`js
+```js
 const ws = new WebSocket('wss://xauview.onrender.com/ws?symbol=XAUUSD&tf=M1');
 ws.onmessage = (ev) => {
   const m = JSON.parse(ev.data);
   if (m.type === 'snapshot') console.log(m.bars.length, m.provider); // 600, "yahoo"
   if (m.type === 'tick')     console.log(m.price, m.provider);
 };
-`
+```
 
 Python bilan:
 
-`python
+```python
 import asyncio, json, websockets
 
 async def main():
@@ -190,7 +190,7 @@ async def main():
         print(tick["type"], tick["price"], tick["provider"])
 
 asyncio.run(main())
-`
+```
 
 REST endpointlar:
 
@@ -211,7 +211,7 @@ Ilova manzilni o'zi aniqlaydi (`feedBase()` -> `wss://xauview.onrender.com`).
 
 **B variant (APK / oflayn HTML).** Ilovada:
 
-1. Yuqori o'ngdagi **... (Menyu)** ni bosing.
+1. Yuqori o'ngdagi **⋮ (Menyu)** tugmasini bosing.
 2. **Manba** qatoridagi maydonga yozing: `wss://xauview.onrender.com`
    (faqat host; `/ws?symbol=...` ni ilova o'zi qo'shadi).
 3. **Ulanish** tugmasini bosing. Manzil `localStorage['xauview.feed']` da saqlanadi.
@@ -238,12 +238,12 @@ M1 tick bilan to'g'rilanadi).
 
 ## 9. Lokal test natijasi (2026-11-16, Windows, MT5 bloklangan)
 
-`
-JAMI: 24/24 PASS, 0 FAIL (4.6 s)
-WS snapshot: 600 bar, provider=yahoo; WS tick: price=3868.0, provider=yahoo
+```
+JAMI: 24/24 PASS, 0 FAIL (4.4 s)
+WS snapshot: 600 bar, provider=yahoo; WS tick: price=3864.8, provider=yahoo
 /api/candles: 100 bar, provider=yahoo; /api/health: data_mode=open, mt5=false
 GET /: 200 text/html (1.46 MB mobil ilova)
-`
+```
 
 Docker image bu mashinada **build qilinmagan** (Docker o'rnatilmagan); Linux'dagi
 xatti-harakat MT5 bloklangan holda `test_render_local.py` bilan tekshirildi.
@@ -251,12 +251,12 @@ Render'dagi birinchi build logi shu sababli kuzatilishi tavsiya etiladi.
 
 ## 10. Lokal Docker (ixtiyoriy, Docker o'rnatilgan bo'lsa)
 
-`
+```
 cd D:\Project\AI\tvclone
 docker build -f server/Dockerfile -t xauview .
 docker run --rm -p 8080:8080 -e XAUVIEW_DATA=open xauview
 # http://127.0.0.1:8080/api/health
-`
+```
 
 ## 11. Muammolar / FAQ
 

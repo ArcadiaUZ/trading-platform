@@ -76,6 +76,7 @@ SYMBOLS: dict[str, str] = {
 }
 DEFAULT_DIGITS: dict[str, int] = {"XAUUSD": 3, "GBPUSD": 5}
 
+
 def _mt5_const(name: str, fallback: int) -> int:
     """MT5 konstantasi; modul yo'q bo'lsa fallback (real MT5 qiymatlari)."""
     value = getattr(mt5, name, None) if mt5 is not None else None
