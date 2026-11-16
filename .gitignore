@@ -22,3 +22,9 @@ venv/
 # OS
 Thumbs.db
 .DS_Store
+# apk build artifacts
+apk-build/work/
+apk-build/assets/
+apk-build/xauview.keystore
+*.apk
+*.keystore

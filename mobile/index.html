@@ -3139,6 +3139,9 @@ function opSheet(){
   opLoad(function(){
     var h = '<div class="row"><span class="lbl">Aktiv manba<small>narx qayerdan olinadi</small></span><span class="val">' + esc(String(OP.active || '--').toUpperCase()) + '</span></div>';
     h += '<div class="hint">Bepul/ochiq manbalar (API kalit kerak emas). OANDA/FXCM O\'zbekistonda ishlamaydi, shuning uchun Yahoo/Stooq/gold-api. MT5 ulangan bo\'lsa - birinchi navbatda MT5.</div>';
+    if (typeof And !== 'undefined' && And && And.getServer) {
+      h += '<div class="row" id="opSrv"><span class="lbl">APK server manzili<small>' + esc(And.getServer() || 'offline') + '</small></span><span class="val">ozgartirish</span></div>';
+    }
     if (OP.list.length) {
       h += '<div style="margin-top:8px">';
       OP.list.forEach(function(p){
@@ -3150,6 +3153,8 @@ function opSheet(){
       h += '</div>';
     } else h += '<div class="hint">Server /api/providers bermadi (eski versiya bo\'lishi mumkin).</div>';
     openSheet('Malumot manbasi', h, function(body){
+      var sr = body.querySelector('#opSrv');
+      if (sr) sr.addEventListener('click', function(){ closeSheet(); setTimeout(function(){ And.chooseServer(); }, 200); });
       body.querySelectorAll('[data-prov]').forEach(function(row){
         row.addEventListener('click', function(){
           var nm = row.getAttribute('data-prov');
