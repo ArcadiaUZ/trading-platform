@@ -373,19 +373,25 @@ function toolsSheet(){
    ['hline','Horizontal','ic_horizontal_line_drawings'],['vline','Vertical','ic_vertical_line_drawings'],
    ['text','Text','ic_text_drawings'],['fib','Fibo','ic_fib_retracement_drawings'],
    ['measure','Olchov','ic_measure_drawings'],['ray','Ray','ic_ray_drawings'],
-   ['arrow','Streleka','ic_arrow_drawings'],['crosshair','Crosshair','ic_cross_line_drawings']].forEach(function(t){
-    h += '<button class="opt ' + (D.tool === t[0] ? 'on' : '') + '" data-tool2="' + t[0] + '">' + apkIcon(t[2], 'oi') + t[1] + '</button>';
+   ['arrow','Streleka','ic_arrow_drawings'],['crosshair','Crosshair','ic_cross_line_drawings'],
+   ['brush','Brush','ic_curve_drawings'],['highlighter','Marker','ic_highlighter_drawings'],
+   ['channel','Kanal','ic_parallel_channel_drawings'],['hray','Gor.ray','ic_horizontal_ray_drawings']].forEach(function(t){
+    var ic = apkIcon(t[2], 'oi') || apkIcon('ic_curve_drawings', 'oi') || apkIcon('ic_trend_line_drawings', 'oi');
+    h += '<button class="opt ' + (D.tool === t[0] ? 'on' : '') + '" data-tool2="' + t[0] + '">' + ic + t[1] + '</button>';
   });
   h += '</div>';
   h += '<div class="btnrow"><button class="btn" id="tUndo">' + apkIcon('ic_chart_native_panel_undo','bi') + 'Undo</button>' +
        '<button class="btn" id="tRedo">' + apkIcon('ic_chart_native_panel_redo','bi') + 'Redo</button>' +
        '<button class="btn danger" id="tClear">' + apkIcon('ic_chart_context_menu_trash','bi') + 'Tozalash</button></div>';
-  h += '<div class="hint">Chizmalar har symbol uchun alohida saqlanadi. Chartda chizish: asbobni tanla - barmoq bilan sudra (yoki 2 marta bos).</div>';
+  h += '<div class="hint">Chizmalar har symbol uchun alohida saqlanadi. Chartda chizish: asbobni tanla - barmoq bilan sudra (yoki 2 marta bos). Ro&#39;yxatdagi &#9881; - chizma rangi/qalinligi/uslubi.</div>';
   if (D.items.length) {
     h += '<div style="margin-top:10px">';
     D.items.forEach(function(it, i){
       var nm = TYPE_NAME[it.type] || it.type;
-      h += '<div class="row"><span class="lbl">' + nm + (it.text ? ' - ' + esc(it.text) : '') + '</span>' +
+      var cc = it.color || '#2962FF';
+      h += '<div class="row"><span class="dott" style="background:' + cc + ';box-shadow:inset 0 0 0 1px rgba(0,0,0,.4)"></span>' +
+           '<span class="lbl">' + nm + (it.text ? ' - ' + esc(it.text) : '') + (it.locked ? ' &middot; qulf' : '') + (it.hidden ? ' &middot; yashirin' : '') + '</span>' +
+           '<button class="gear" data-style="' + it.id + '" title="Stil">&#9881;</button>' +
            '<button class="del" data-delitem="' + it.id + '">&#10005;</button></div>';
     });
     h += '</div>';
@@ -399,6 +405,11 @@ function toolsSheet(){
     body.querySelector('#tClear').addEventListener('click', function(){
       if (!D.items.length) { closeSheet(); return; }
       snapshot(); D.items = []; saveDrawings(); closeSheet(); mark();
+    });
+    body.querySelectorAll('[data-style]').forEach(function(b){
+      b.addEventListener('click', function(){
+        if (typeof openStyleSheet === 'function') openStyleSheet(b.dataset.style);
+      });
     });
     body.querySelectorAll('[data-delitem]').forEach(function(b){
       b.addEventListener('click', function(){

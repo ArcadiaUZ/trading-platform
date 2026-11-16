@@ -132,9 +132,55 @@ def _pack(name: str, bars: list[list], delay_s: float) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# Baza provayder: xatolarni yutadi, hech qachon raise qilmaydi
+# ---------------------------------------------------------------------------
+class Provider:
+    """Umumiy interfeys: .name, .supports(sym), .quote(sym), .bars(sym, tf, n).
+
+    Har qanday tarmoq/parse xatosi yutiladi va None qaytadi; sabab .last_error'da
+    qoladi (u /api/providers -> last_err uchun ishlatiladi).
+    """
+
+    name = "base"
+    has_bars = False
+    supports_quote: frozenset = frozenset()
+    last_error: Optional[str] = None
+
+    def supports(self, sym: str) -> bool:
+        return str(sym or "").upper() in self.supports_quote
+
+    def _fail(self, exc: BaseException) -> None:
+        self.last_error = f"{type(exc).__name__}: {exc}"[:300]
+
+    async def bars(self, sym: str, tf: str, n: int = 600) -> Optional[dict]:
+        self.last_error = None
+        try:
+            return await self._bars(sym, tf, n)
+        except Exception as exc:  # timeout, HTTP, JSON, ...
+            self._fail(exc)
+            LOG.debug("provider %s bars xato: %r", self.name, exc)
+            return None
+
+    async def quote(self, sym: str) -> Optional[dict]:
+        self.last_error = None
+        try:
+            return await self._quote(sym)
+        except Exception as exc:
+            self._fail(exc)
+            LOG.debug("provider %s quote xato: %r", self.name, exc)
+            return None
+
+    async def _bars(self, sym: str, tf: str, n: int = 600) -> Optional[dict]:
+        return None
+
+    async def _quote(self, sym: str) -> Optional[dict]:
+        return None
+
+
+# ---------------------------------------------------------------------------
 # 1. Yahoo Finance
 # ---------------------------------------------------------------------------
-class YahooProvider:
+class YahooProvider(Provider):
     """Yahoo Finance chart JSON. Kalit kerak emas."""
 
     name = "yahoo"
@@ -156,9 +202,6 @@ class YahooProvider:
         "1d": 86400, "5d": 5 * 86400, "1mo": 30 * 86400, "3mo": 90 * 86400,
         "6mo": 180 * 86400, "1y": 365 * 86400, "2y": 730 * 86400, "5y": 1825 * 86400,
     }
-
-    def supports(self, sym: str) -> bool:
-        return str(sym or "").upper() in self.SYMBOLS
 
     def _pick_range(self, tf: str, n: int) -> str:
         """n bar uchun eng kichik yetarli range (interval limitlarini hisobga oladi)."""
@@ -198,7 +241,7 @@ class YahooProvider:
             rows.append((int(ts), float(o), float(h), float(l), float(c), int(volume)))
         return rows, meta
 
-    async def bars(self, sym: str, tf: str, n: int = 600) -> Optional[dict]:
+    async def _bars(self, sym: str, tf: str, n: int = 600) -> Optional[dict]:
         sym = str(sym or "").upper()
         tf = str(tf or "").upper()
         ticker = self.SYMBOLS.get(sym)
@@ -222,7 +265,7 @@ class YahooProvider:
         bars = bars[-max(1, int(n)):]
         return _pack(self.name, bars, time.time() - bars[-1][0])
 
-    async def quote(self, sym: str) -> Optional[dict]:
+    async def _quote(self, sym: str) -> Optional[dict]:
         sym = str(sym or "").upper()
         ticker = self.SYMBOLS.get(sym)
         if ticker is None:
@@ -250,7 +293,7 @@ class YahooProvider:
 # ---------------------------------------------------------------------------
 # 2. Stooq CSV
 # ---------------------------------------------------------------------------
-class StooqProvider:
+class StooqProvider(Provider):
     """Stooq CSV: quote har doim, bar faqat kunlik (D1)."""
 
     name = "stooq"
@@ -268,9 +311,6 @@ class StooqProvider:
         except Exception:  # pragma: no cover - tzdata yo'q
             self._zone = timezone(timedelta(hours=1))
 
-    def supports(self, sym: str) -> bool:
-        return str(sym or "").upper() in self.SYMBOLS
-
     @staticmethod
     def _rows(body: bytes) -> list[list[str]]:
         text = body.decode("utf-8", "replace")
@@ -284,7 +324,7 @@ class StooqProvider:
             return None
         return int(moment.replace(tzinfo=self._zone).timestamp())
 
-    async def bars(self, sym: str, tf: str, n: int = 600) -> Optional[dict]:
+    async def _bars(self, sym: str, tf: str, n: int = 600) -> Optional[dict]:
         sym = str(sym or "").upper()
         tf = str(tf or "").upper()
         ticker = self.SYMBOLS.get(sym)
@@ -324,7 +364,7 @@ class StooqProvider:
         out = out[-max(1, int(n)):]
         return _pack(self.name, out, time.time() - out[-1][0])
 
-    async def quote(self, sym: str) -> Optional[dict]:
+    async def _quote(self, sym: str) -> Optional[dict]:
         sym = str(sym or "").upper()
         ticker = self.SYMBOLS.get(sym)
         if ticker is None:
@@ -356,7 +396,7 @@ class StooqProvider:
 # ---------------------------------------------------------------------------
 # 3. gold-api.com (spot, faqat XAU)
 # ---------------------------------------------------------------------------
-class GoldApiProvider:
+class GoldApiProvider(Provider):
     """https://api.gold-api.com/price/XAU - bepul spot narx, bar yo'q."""
 
     name = "goldapi"
@@ -364,13 +404,10 @@ class GoldApiProvider:
     supports_quote = frozenset({"XAUUSD"})
     URL = "https://api.gold-api.com/price/XAU"
 
-    def supports(self, sym: str) -> bool:
-        return str(sym or "").upper() in self.supports_quote
-
-    async def bars(self, sym: str, tf: str, n: int = 600) -> Optional[dict]:
+    async def _bars(self, sym: str, tf: str, n: int = 600) -> Optional[dict]:
         return None  # gold-api faqat spot
 
-    async def quote(self, sym: str) -> Optional[dict]:
+    async def _quote(self, sym: str) -> Optional[dict]:
         if not self.supports(sym):
             return None
         sym = str(sym or "").upper()

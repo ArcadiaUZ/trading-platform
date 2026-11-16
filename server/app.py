@@ -92,6 +92,7 @@ SNAPSHOT_BARS = 600           # WS ulanishda yuboriladigan bar soni
 MAX_CANDLES = 5000
 MAX_WS_CLIENTS = 64
 VERSION = "1.0.0"
+OPEN_STALE_S = 60.0            # OPEN fallback: MT5 data shu vaqtdan eski bo'lsa almashtiriladi
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -121,6 +122,14 @@ def setup_logging() -> logging.Logger:
 
 
 logger = setup_logging()
+
+# --- OPEN data provayderlari (API kalitsiz) ---------------------------------
+# Modul buzilgan bo'lsa ham server o'lmaydi: OPEN = None bo'lib qoladi.
+try:
+    from providers_open import OPEN
+except Exception as _open_exc:  # pragma: no cover
+    OPEN = None
+    logger.warning("providers_open import qilinmadi (open fallback o'chiq): %r", _open_exc)
 
 # ---------------------------------------------------------------------------
 # Yordamchi funksiyalar
@@ -237,6 +246,87 @@ async def bars_for(broker: str, tf_value: int, count: int, digits: int) -> Optio
         await manager.ensure()
         bars = await mt5_wait(fetch_bars_sync, broker, tf_value, count, digits, timeout=15.0)
     return bars
+
+
+# ---------------------------------------------------------------------------
+# OPEN data fallback (server/providers_open.py)
+# ---------------------------------------------------------------------------
+OPEN_TICKS: dict[str, dict] = {}          # MT5 ishlamasa, open provayderdan oxirgi narx
+_TICK_TRACK: dict[str, list] = {}         # symbol -> [tick_time, mono o'zgargan payt]
+
+
+def tick_data_fresh(symbol: str) -> bool:
+    """MT5 tick vaqti OPEN_STALE_S ichida o'zgarganmi (data yangiligi)."""
+    track = _TICK_TRACK.get(symbol)
+    return track is not None and (time.monotonic() - float(track[1])) <= OPEN_STALE_S
+
+
+def mt5_fresh(symbol: str) -> bool:
+    return bool(manager.connected) and tick_data_fresh(symbol)
+
+
+def bars_stale(bars: Optional[list], period: int) -> bool:
+    if not bars:
+        return True
+    try:
+        return (time.time() - int(bars[-1][0])) > OPEN_STALE_S
+    except (TypeError, ValueError, IndexError):
+        return True
+
+
+async def open_bars_or_none(symbol: str, tf: str, count: int) -> Optional[dict]:
+    """Birinchi ishlaydigan open provayderdan barlar. Xato -> None (raise yo'q)."""
+    if OPEN is None:
+        return None
+    try:
+        return await asyncio.wait_for(OPEN.bars(symbol, tf, count), timeout=18.0)
+    except Exception:
+        logger.debug("open bars fallback xatosi", exc_info=True)
+        return None
+
+
+async def open_quote_or_none(symbol: str) -> Optional[dict]:
+    """Birinchi ishlaydigan open provayderdan oxirgi narx. Xato -> None."""
+    if OPEN is None:
+        return None
+    try:
+        return await asyncio.wait_for(OPEN.quote(symbol), timeout=12.0)
+    except Exception:
+        logger.debug("open quote fallback xatosi", exc_info=True)
+        return None
+
+
+async def open_feed_loop() -> None:
+    """MT5 tick'i eskirgan bo'lsa, open provayderlardan narx olib OPEN_TICKS'ni to'ldiradi."""
+    if OPEN is None:
+        return
+    while True:
+        try:
+            now_mono = time.monotonic()
+            for symbol in SYMBOLS:
+                tick = TICKS.get(symbol)
+                if tick is None:
+                    continue
+                tick_time = int(tick.get("time") or 0)
+                track = _TICK_TRACK.get(symbol)
+                if track is None or int(track[0]) != tick_time:
+                    _TICK_TRACK[symbol] = [tick_time, now_mono]
+            forced = OPEN.forced
+            need = [symbol for symbol in SYMBOLS if forced or not mt5_fresh(symbol)]
+            for symbol in need:
+                quote = await open_quote_or_none(symbol)
+                if not quote:
+                    continue
+                price = float(quote["last"])
+                ts = int(quote.get("ts") or time.time())
+                OPEN_TICKS[symbol] = {
+                    "symbol": symbol, "bid": price, "ask": price, "price": price,
+                    "last": price, "time": ts,
+                    "provider": quote.get("provider"), "latency_ms": quote.get("latency_ms"),
+                }
+        except Exception:
+            logger.debug("open_feed_loop xatosi", exc_info=True)
+        await asyncio.sleep(2.0)
 
 
 # ---------------------------------------------------------------------------
@@ -1088,6 +1178,14 @@ async def alert_loop() -> None:
 def tick_message(client: WSClient, tick: dict) -> dict:
     digits = client.digits
     bar = client.state.bar
+    provider = "mt5"
+    provider_delay_s = 0.0
+    if not mt5_fresh(client.symbol):
+        provider = str(tick.get("provider") or "open")
+        try:
+            provider_delay_s = round(max(0.0, time.time() - float(tick.get("time") or 0)), 1)
+        except (TypeError, ValueError):
+            provider_delay_s = 0.0
     return {
         "type": "tick",
         "symbol": client.symbol,
@@ -1098,6 +1196,8 @@ def tick_message(client: WSClient, tick: dict) -> dict:
         "time": int(tick["time"]),
         "bar": list(bar) if bar else [],
         "new_bar": client.state.consume_new_bar(),
+        "provider": provider,
+        "provider_delay_s": provider_delay_s,
     }
 
 
@@ -1150,6 +1250,19 @@ def _log_task_error(task: asyncio.Task) -> None:
 async def ws_tick_loop(client: WSClient) -> None:
     state = client.state
     bars = await state.load(SNAPSHOT_BARS)
+    provider = "mt5"
+    provider_delay_s = 0.0
+    if (not manager.connected) or bars_stale(bars, state.period):
+        fallback = await open_bars_or_none(client.symbol, client.tf, SNAPSHOT_BARS)
+        if fallback and fallback.get("bars"):
+            bars = fallback["bars"]
+            state.bar = list(bars[-1])
+            provider = str(fallback.get("provider") or "open")
+            provider_delay_s = float(fallback.get("delay_s") or 0.0)
+            logger.info("Snapshot open manbadan: %s (kechikish %.0fs, id=%s)",
+                        provider, provider_delay_s, client.id)
+        elif not bars:
+            provider = "demo"
     if not bars:
         logger.warning("Snapshot uchun bar yo'q (id=%s symbol=%s tf=%s)", client.id, client.symbol, client.tf)
     await client.queue.put({
@@ -1158,6 +1271,8 @@ async def ws_tick_loop(client: WSClient) -> None:
         "tf": client.tf,
         "digits": client.digits,
         "bars": bars,
+        "provider": provider,
+        "provider_delay_s": provider_delay_s,
     })
     loop = asyncio.get_running_loop()
     next_at = loop.time()
@@ -1174,6 +1289,10 @@ async def ws_tick_loop(client: WSClient) -> None:
             elif delay < -TICK_INTERVAL:
                 next_at = now
             tick = TICKS.get(client.symbol)
+            if not mt5_fresh(client.symbol):
+                fallback_tick = OPEN_TICKS.get(client.symbol)
+                if fallback_tick is not None:
+                    tick = fallback_tick
             if tick is None:
                 if time.monotonic() - last_no_tick_log > 10.0:
                     logger.warning("Tick ma'lumoti yo'q: %s", client.symbol)
@@ -1225,6 +1344,7 @@ async def lifespan(app: FastAPI):
         asyncio.create_task(manager.watchdog(), name="mt5-watchdog"),
         asyncio.create_task(manager.poll_ticks(), name="mt5-ticks"),
         asyncio.create_task(alert_loop(), name="alert-loop"),
+        asyncio.create_task(open_feed_loop(), name="open-feed"),
     ]
 
     local_ip = lan_ip()
@@ -1416,6 +1536,55 @@ async def api_health() -> dict:
     }
 
 
+class ProviderSelect(BaseModel):
+    name: str
+
+
+@app.get("/api/providers")
+async def api_providers() -> dict:
+    """Qaysi manba aktiv + har bir provayder holati (open data, kalitsiz)."""
+    if OPEN is None:
+        return {
+            "active": "mt5" if manager.connected else "demo",
+            "providers": [{"name": "mt5", "ok": bool(manager.connected),
+                           "latency_ms": None, "last_ok": None,
+                           "last_err": "providers_open.py yuklanmadi"}],
+            "note": "open data, no API key (providers_open.py yuklanmadi)",
+        }
+    status = OPEN.status_json()
+    # MT5 sog'lom bo'lsa u har doim aktiv (open manba faqat zaxira)
+    if manager.connected and all(mt5_fresh(symbol) for symbol in SYMBOLS):
+        status["active"] = "mt5"
+    for row in status.get("providers") or []:
+        if row.get("name") == "mt5":
+            row["ok"] = bool(manager.connected)
+    status["mt5"] = bool(manager.connected)
+    status["mt5_fresh"] = {symbol: mt5_fresh(symbol) for symbol in SYMBOLS}
+    status["open_ticks"] = {
+        symbol: {"price": tick.get("price"), "provider": tick.get("provider"),
+                 "time": tick.get("time"), "age_s": tick.get("time") and round(max(0.0, time.time() - int(tick["time"])), 1)}
+        for symbol, tick in OPEN_TICKS.items()
+    }
+    status["version"] = VERSION
+    return status
+
+
+@app.post("/api/provider")
+async def api_select_provider(payload: ProviderSelect) -> dict:
+    """Test uchun provayderni majburan tanlash (mt5 -> default)."""
+    if OPEN is None:
+        raise HTTPException(status_code=503, detail="providers_open.py yuklanmadi")
+    name = str(payload.name or "").strip().lower()
+    if not OPEN.select(name):
+        raise HTTPException(status_code=400, detail=f"Noma'lum provider: {name}. Ruxsat: {list(OPEN.ORDER)}")
+    quote = None
+    if name != "mt5":
+        quote = await open_quote_or_none(DEFAULT_SYMBOL)
+    logger.info("Provayder tanlandi: %s (forced=%s)", name, OPEN.forced)
+    return {"ok": True, "selected": name, "active": OPEN.active,
+            "forced": OPEN.forced, "quote": quote}
+
+
 @app.get("/api/candles")
 async def api_candles(symbol: str = DEFAULT_SYMBOL, tf: str = DEFAULT_TF, count: int = 500) -> dict:
     sym = str(symbol or "").strip().upper()
@@ -1433,9 +1602,18 @@ async def api_candles(symbol: str = DEFAULT_SYMBOL, tf: str = DEFAULT_TF, count:
 
     digits = _alert_digits(sym)
     bars = await bars_for(SYMBOLS[sym], TF_VALUES[timeframe], bars_count, digits)
+    provider = "mt5"
+    provider_delay_s = 0.0
+    if bars is None or not bars:
+        fallback = await open_bars_or_none(sym, timeframe, bars_count)
+        if fallback and fallback.get("bars"):
+            bars = fallback["bars"]
+            provider = str(fallback.get("provider") or "open")
+            provider_delay_s = float(fallback.get("delay_s") or 0.0)
     if bars is None or not bars:
         raise HTTPException(status_code=503, detail="MT5 ma'lumot bermadi (terminal ulanganmi?)")
-    return {"symbol": sym, "tf": timeframe, "bars": bars}
+    return {"symbol": sym, "tf": timeframe, "bars": bars,
+            "provider": provider, "provider_delay_s": provider_delay_s}
 
 
 @app.get("/api/alerts")

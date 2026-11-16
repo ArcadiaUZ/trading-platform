@@ -8,6 +8,7 @@ __pycache__/
 *.exe
 *.xapk
 *.apk
+server/logs/
 server/PID.txt
 server/*.log
 server/tunnel-url.txt

@@ -1,0 +1,23 @@
+const puppeteer = require('D:/Project/AI/tradelab/node_modules/puppeteer-core');
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+(async () => {
+  const b = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: 'new', args: ['--no-sandbox','--disable-gpu'] });
+  const p = await b.newPage();
+  const errs = [];
+  p.on('pageerror', e => errs.push(String(e).slice(0,160)));
+  p.on('console', m => { if (m.type() === 'error' && !/vibrate|AudioContext|favicon|net::ERR/.test(m.text())) errs.push(m.text().slice(0,160)); });
+  await p.setViewport({ width: 393, height: 873, deviceScaleFactor: 3, isMobile: true, hasTouch: true });
+  await p.goto('http://127.0.0.1:8765/', { waitUntil: 'load' });
+  await sleep(3200);
+  const chip = await p.evaluate(() => { var e = document.getElementById('provChip'); return e ? { txt: e.textContent, cls: e.className } : null; });
+  console.log('CHIP', JSON.stringify(chip));
+  const api = await p.evaluate(async () => { try { const r = await fetch('/api/providers'); return { status: r.status, body: (await r.text()).slice(0, 600) }; } catch (e) { return { err: String(e) }; } });
+  console.log('API', JSON.stringify(api));
+  await p.evaluate(() => document.getElementById('provChip').click());
+  await sleep(900);
+  const sheet = await p.evaluate(() => ({ title: (document.getElementById('shTitle') || {}).textContent, rows: Array.from(document.querySelectorAll('#shBody .row')).map(r => r.textContent.replace(/\s+/g,' ').slice(0,70)) }));
+  console.log('SHEET', JSON.stringify(sheet));
+  await p.screenshot({ path: 'D:/Project/AI/tvclone/shots/m82-provider.png' });
+  console.log('ERRORS', JSON.stringify(errs.slice(0,5)));
+  await b.close();
+})().catch(e => { console.log('FAIL', String(e).slice(0,400)); process.exit(1); });

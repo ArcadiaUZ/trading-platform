@@ -1,7 +1,7 @@
 {
   "project": "XAUView (TradingView-uslub charting + alerts)",
   "root": "D:\\Project\\AI\\tvclone",
-  "updated": "2026-11-16T17:35:00+05:00",
+  "updated": "2026-11-16T17:20:00+05:00",
   "phase": {
     "P0": "done",
     "P1": "done",
@@ -94,10 +94,21 @@
     "desktop demo default temasi: black (app) ga o'tkazish",
     "long-press gesture + APK ikonkalarini qo'llash"
   ],
+  "open_data": {
+    "providers": "mt5 -> yahoo -> stooq -> goldapi (API kalit kerak emas)",
+    "endpoints": ["GET /api/providers", "POST /api/provider"],
+    "test": "test_open.py 5/6 PASS (stooq bloklangan), test_feed.py --soak 30 -> 15/15 PASS",
+    "docs": "docs/OPEN-DATA.md",
+    "note": "yahoo: XAU=GC=F futures, 1m bar kechikishi ~1-10 daq; goldapi faqat spot"
+  },
+  "git": {
+    "repo": "D:\\Project\\AI\\tvclone (git init qilingan, branch master)",
+    "first_commit": "7c11aa0 (418 fayl)",
+    "push": "remote qo'shilmagan - GitHub URL kerak"
+  },
   "pending": [
-    "OANDA v20 / FXCM real feed adapter (API kalit kutilmoqda)",
-    "brush / highlighter / parallel channel (multi-point chizmalar)",
-    "per-item rang/qalinlik UI (chizma sozlamalari)",
+    "git push (GitHub remote URL kerak)",
+    "telefonda notification sinovi (https tunnel orqali, user tomonidan)",
     "telefonda notification sinovi (https tunnel orqali, user tomonidan)",
     "git init + GitHub push (tvclone)",
     "server + tunnel autostart (skript tayyor, faqat bir marta o'rnatish kerak)"
@@ -113,7 +124,9 @@
     "pwa": "manifest + sw.js + _m6_pwa.js (SW registratsiya, __PWA.notify)",
     "notifications": "Android Chrome uchun SW showNotification; https yoki localhost talab",
     "alerts": "4 tur + zone on_cross (faqat kirish paytida) + repeat",
-    "drawings": "trendline, hline, vline, rect, text, fib retracement, measure, ray, arrow",
+    "drawings": "14 tur: trendline, hline, vline, hray, rect, text, fib, measure, ray, arrow, brush, highlighter, channel (_m3_chart.js)",
+    "drawing_style": "rang(12), qalinlik(1/2/3/4 + brush 4/8/14/22), uslub(solid/dash/dot), shaffoflik, fill+fillColor, fontSize, locked (_m9_style.js)",
+    "provider_chip": "top barda manba badge (MT5/YAHOO/...) + sheet orqali almashtirish (_m10_open.js)",
     "chartTypes": "candles / hollow / bars / line / area (_m8_charttype.js, localStorage)"
   },
   "desktop_demo": {

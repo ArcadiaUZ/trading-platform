@@ -12,6 +12,8 @@ var PALETTE = ['#2962FF','#22AB94','#F7525F','#FF9800','#FFEB3B','#9C27B0','#00B
 var FILLS   = ['#2962FF','#22AB94','#F7525F','#FF9800','#9C27B0','#FFFFFF'];
 var BAR_COLORS = ['#2962FF','#F7525F','#22AB94','#FF9800','#9C27B0','#FFFFFF'];
 var WIDTHS = [1,2,3,4];
+var FREEHAND_WIDTHS = [4,8,14,22];
+var FREEHAND_TYPES = { brush: 1, highlighter: 1 };
 var STYLE_ORDER = ['solid','dash','dot'];
 var STYLE_NAME = { solid: 'Solid', dash: 'Dash', dot: 'Nuqta' };
 var FILL_TYPES = { rect: 1, channel: 1, fib: 1 };
@@ -146,11 +148,12 @@ function sheetHtml(it){
   h += '</div>';
 
   h += sect('Qalinlik');
+  var wset = FREEHAND_TYPES[kind] ? FREEHAND_WIDTHS : WIDTHS;
   h += '<div class="ds-row">';
-  for (var w = 0; w < WIDTHS.length; w++) {
-    var ww = WIDTHS[w], won = Math.abs((Number(it.width) || 1.6) - ww) < 0.01;
+  for (var w = 0; w < wset.length; w++) {
+    var ww = wset[w], won = Math.abs((Number(it.width) || 1.6) - ww) < 0.01;
     h += '<button class="' + (won ? 'on' : '') + '" data-width="' + ww + '">' +
-         '<i class="ds-line" style="width:28px;height:' + ww + 'px;background:' + c + '"></i>' +
+         '<i class="ds-line" style="width:28px;height:' + Math.max(1, Math.min(ww, 12)) + 'px;background:' + c + '"></i>' +
          '<span>' + ww + '</span></button>';
   }
   h += '</div>';
@@ -234,7 +237,7 @@ function paintPreview(it){
     g.font = '600 ' + (Number(it.fontSize) || 11) + 'px -apple-system,Segoe UI,Roboto,sans-serif';
     g.textBaseline = 'middle';
     g.fillText(it.text || 'Aa', 14, h / 2);
-  } else if (kind === 'hline') {
+  } else if (kind === 'hline' || kind === 'hray') {
     g.beginPath(); g.moveTo(12, h / 2); g.lineTo(w - 12, h / 2); g.stroke();
   } else if (kind === 'vline') {
     g.beginPath(); g.moveTo(w / 2, 8); g.lineTo(w / 2, h - 8); g.stroke();
@@ -465,10 +468,34 @@ function barPaint(it){
   var sb = d.querySelector('[data-act="style"]');
   if (sb) sb.innerHTML = lineSample(it.style || 'solid', c, 20, 2);
 }
+function itemBBox(it){
+  try {
+    if (typeof tsX !== 'function' || typeof pY !== 'function') return null;
+    var xs = [], ys = [];
+    for (var i = 0; i < it.pts.length; i++) {
+      var p = it.pts[i];
+      if (p.ts != null) xs.push(tsX(p.ts));
+      if (p.p != null) ys.push(pY(p.p));
+    }
+    if (!xs.length || !ys.length) return null;
+    return { x0: Math.min.apply(null, xs), x1: Math.max.apply(null, xs),
+             y0: Math.min.apply(null, ys), y1: Math.max.apply(null, ys) };
+  } catch (e) { return null; }
+}
+/* brush/highlighter have no selected handles -> anchor on the stroke bbox */
+function barAnchor(it, x, y){
+  if (it && FREEHAND_TYPES[it.type]) {
+    var b = itemBBox(it);
+    if (b) return { x: (b.x0 + b.x1) / 2, y: b.y0 };
+  }
+  return { x: x, y: y };
+}
 function showBar(it, x, y){
   if (!it) { hideBar(); return; }
   var d = makeBar();
   if (!d) return;
+  var anc = barAnchor(it, x, y);
+  x = anc.x; y = anc.y;
   STY.barFor = it.id; STY.barX = x; STY.barY = y;
   barPaint(it);
   d.classList.add('on');

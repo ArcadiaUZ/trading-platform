@@ -341,3 +341,62 @@ Yangi modul: **`mobile/src/_m8_charttype.js`** (`drawCandles` ni almashtiradi).
 - Test (puppeteer-core, viewport 1440x900, file://): **22/22 PASS**, 0 `pageerror`, 0 `console.error`; reloaddan keyin 4 chizma tiklandi.
 - Skrinshotlar: `e29-drawmenu.png`, `e30-fib.png`, `e31-measure.png`, `e32-ray.png`, `e33-daterange.png`, `e34-fib-selected.png`, `e35-reload.png`.
 
+
+## 13. v6 sessiya — brush/highlighter/kanal, chizma sozlamalari, ochiq manbalar, git
+
+### 13.1 Yangi chizma asboblari (jami 14) — `mobile/src/_m3_chart.js`
+| Asbob | Nuqta | Tavsif |
+|---|---|---|
+| **Brush** | N (erkin) | barmoq bilan erkin chizish, silliqlangan (quadratic midpoint), yumaloq uchlari |
+| **Marker** (highlighter) | N | 14px yarim shaffof (alpha .35) + 1.35x glow pass |
+| **Kanal** (parallel channel) | 3 | 2 nuqta = chiziq, 3-nuqta = kenglik; ikkala chiziq chart chetiga cho'ziladi + to'ldirish |
+| **Gor.ray** (hray) | 1 | gorizontal nur: nuqtadan o'ngga cheksiz, narx yorlig'i bilan |
+
+Erkin chizish: `pointerdown` -> `D.freehand=true`, har 2.2px dan keyin nuqta qo'shiladi (max 600 nuqta),
+`pointerup` da `snapshot()` + item saqlanadi. Kanal: 1-drag chiziq, 2-drag kenglik (toast yo'l-yo'riq beradi).
+
+### 13.2 Chizma sozlamalari (customization) — `mobile/src/_m9_style.js`
+- **`openStyleSheet(id)`** sheet: 12 rang, qalinlik (1/2/3/4; brush/highlighter uchun 4/8/14/22),
+  uslub (solid/dash/dot), shaffoflik 15-100%, fill + 6 fill rangi (rect/kanal/fib), matn o'lchami, live preview.
+- Amallar: **Nusxa** (duplicate), **Qulflash** (locked - sudrab bo'lmaydi), **O'chirish**, **Yopish**.
+- Bitta sheet sessiyasi = **bitta undo qadami** (`snapshot()` faqat ochilganda).
+- **`#drawBar`** floating toolbar: chartda chizma ustiga tap -> 6 rang + uslub + gear + trash;
+  double-tap -> to'liq sheet; brush/highlighter uchun bbox bo'yicha joylashadi.
+- `_m4_ui.js` toolsSheet: 14 asbob + har chizmada rang dot + gear tugma (style sheet).
+- Model yangi maydonlari: `style, opacity, fill, fillColor, fontSize, locked` — `_m3_chart.js` render qiladi.
+- `mobile/src/_m11_icons.js`: APK'dan 16 qo'shimcha chizma ikonkasi (brush/kanal/lock/trash/ellipse...).
+
+### 13.3 Ochiq ma'lumot manbalari (OANDA/FXCM o'rniga) — `server/providers_open.py`
+OANDA O'zbekistonda ishlamaydi -> **API kalit talab qilmaydigan** manbalar zanjiri:
+`mt5 -> yahoo -> stooq -> goldapi` (MT5 sog'lom bo'lsa birinchi navbatda o'sha).
+- **Yahoo Finance** chart JSON: XAU=**GC=F** (COMEX futures), GBP=**GBPUSD=X**, 600 bar M1 + quote. **PASS** (0.8-1.6s).
+- **gold-api.com**: faqat XAU spot. **PASS** (0.5s).
+- **Stooq CSV**: bu hostdan **HTTP 404** (bloklangan) — halol yozildi. **FAIL**.
+- Endpointlar: `GET /api/providers` (holat/latency/err), `POST /api/provider {name}` (majburiy tanlash).
+- WS `snapshot`/`tick` payloadga `provider` + `provider_delay_s` qo'shildi (kechikish halol ko'rsatiladi).
+- Mobil: top barda **manba badge** (`_m10_open.js`) — MT5/YAHOO/GOLDAPI ko'rinadi, bosilsa sheet'da almashtirish.
+- Test: `server/test_open.py` **5/6 PASS**; `test_feed.py --soak 30` **15/15 PASS** (regressiya yo'q).
+- Docs: **`docs/OPEN-DATA.md`** (kechikish/limitlar/curl misollari).
+
+### 13.4 Testlar (bu sessiya)
+| To'plam | Natija |
+|---|---|
+| `mobile/_t_brush.js` (brush/highlighter/kanal/hray/style/locked/reload/undo) | **10/10 PASS**, 0 JS xato |
+| `mobile/_t_style.js` (style sheet, toolbar, toolsSheet 14, persistence) | **10/10 PASS** |
+| `mobile/_t_provider.js` (badge + /api/providers + almashtirish sheet) | **PASS** |
+| `mobile/_t_full.js` (to'liq mobil regressiya) | **12/12 PASS** |
+| `server/test_open.py` | 5/6 PASS (stooq bloklangan) |
+| `server/test_feed.py --soak 30` | 15/15 PASS |
+
+### 13.5 Yangi skrinshotlar
+| Fayl | Nima |
+|---|---|
+| `m81-brush-highlighter.png` | brush + marker + kanal (fill) + hray + uslub |
+| `m82-provider.png` | manba badge + provider sheet |
+| `s01-style-sheet.png` | Chizma sozlamalari sheet (live preview) |
+| `s02-floating-toolbar.png` | #drawBar floating toolbar |
+
+### 13.6 Git
+- `git init` + ilk commit **7c11aa0** (418 fayl), branch **master**.
+- `.gitignore`: `work/`, `venv/`, `*.exe`, `*.apk`, `*.xapk`, loglar, `server/PID.txt`, `tunnel-url.txt`.
+- `README.md` yozildi. **Push hali yo'q** — GitHub remote URL kerak.
