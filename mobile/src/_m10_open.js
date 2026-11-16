@@ -45,6 +45,8 @@ function opSheet(){
   opLoad(function(){
     var h = '<div class="row"><span class="lbl">Aktiv manba<small>narx qayerdan olinadi</small></span><span class="val">' + esc(String(OP.active || '--').toUpperCase()) + '</span></div>';
     h += '<div class="hint">Bepul/ochiq manbalar (API kalit kerak emas). OANDA/FXCM O\'zbekistonda ishlamaydi, shuning uchun Yahoo/Stooq/gold-api. MT5 ulangan bo\'lsa - birinchi navbatda MT5.</div>';
+    h += '<div class="row" id="opDir"><span class="lbl">Serverless rejim<small>' + (typeof DIRECT !== 'undefined' && DIRECT.on ? 'yonilgan - server/laptop kerak emas' : 'ochirilgan - server kerak') + '</small></span><span class="val">' + (typeof DIRECT !== 'undefined' && DIRECT.on ? 'OFF' : 'ON') + '</span></div>';
+    h += '<div class="row" id="opTd"><span class="lbl">GBPUSD kaliti (TwelveData)<small>' + (function(){ try { return localStorage.getItem('xauview.tdkey') ? 'kiritilgan' : 'bepul kalit kerak'; } catch (e) { return '-'; } })() + '</small></span><span class="val">kiritish</span></div>';
     if (typeof And !== 'undefined' && And && And.getServer) {
       h += '<div class="row" id="opSrv"><span class="lbl">APK server manzili<small>' + esc(And.getServer() || 'offline') + '</small></span><span class="val">ozgartirish</span></div>';
     }
@@ -59,6 +61,13 @@ function opSheet(){
       h += '</div>';
     } else h += '<div class="hint">Server /api/providers bermadi (eski versiya bo\'lishi mumkin).</div>';
     openSheet('Malumot manbasi', h, function(body){
+      var drow = body.querySelector('#opDir');
+      if (drow) drow.addEventListener('click', function(){ closeSheet(); setTimeout(directToggle, 200); });
+      var tdr = body.querySelector('#opTd');
+      if (tdr) tdr.addEventListener('click', function(){
+        var k = window.prompt('TwelveData API kaliti (bepul: twelvedata.com/register):', '');
+        if (k) { try { localStorage.setItem('xauview.tdkey', k.trim()); } catch (e) {} closeSheet(); toast('Kalit saqlandi', 'GBPUSD direct rejimda ishlaydi'); }
+      });
       var sr = body.querySelector('#opSrv');
       if (sr) sr.addEventListener('click', function(){ closeSheet(); setTimeout(function(){ And.chooseServer(); }, 200); });
       body.querySelectorAll('[data-prov]').forEach(function(row){

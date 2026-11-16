@@ -400,3 +400,43 @@ OANDA O'zbekistonda ishlamaydi -> **API kalit talab qilmaydigan** manbalar zanji
 - `git init` + ilk commit **7c11aa0** (418 fayl), branch **master**.
 - `.gitignore`: `work/`, `venv/`, `*.exe`, `*.apk`, `*.xapk`, loglar, `server/PID.txt`, `tunnel-url.txt`.
 - `README.md` yozildi. **Push hali yo'q** — GitHub remote URL kerak.
+
+## 14. v7 sessiya — serverless (to'g'ridan-to'g'ri internet) rejim
+
+### 14.1 Muammo
+Telefon faqat laptop'dagi server bilan ishlardi. Laptop yoniq bo'lmasa feed yo'q.
+
+### 14.2 Yechim: `mobile/src/_m12_direct.js`
+Brauzer **o'zi** internetdan narx oladi (CORS ruxsat berilgan manbalar, API kalit shart emas):
+
+| Data | Manba | CORS | Sifat |
+|---|---|---|---|
+| XAUUSD | `data-api.binance.vision` **PAXGUSDT** klines (1m/3m/5m/15m/30m/1h/4h/1d) | `*` | to'liq OHLC, 4 s yangilanish |
+| XAU narx aniqligi | `api.gold-api.com/price/XAU` (spot) | `*` | PAXG -> spot nisbati (ratio ~1.003) |
+| GBPUSD | TwelveData bepul kaliti (ixtiyoriy) | `*` | kalit bo'lmasa oflayn snapshot |
+
+- PAXG = 1:1 oltin bilan ta'minlangan token; farq ~0.3% -> **spot narxga normallashtiriladi** (`DIRECT.ratio`).
+- Rejimni yoqish: **Menyu -> Malumot manbasi -> Serverless rejim** (yoki `localStorage['xauview.direct']='1'`).
+- Yoqilganda WS qatlami butunlay o'chadi (`connect`/`reconnectNow` guard) - 404/uzilish xatolari yo'q.
+- Symbol/TF almashganda avtomatik qayta yuklanadi (`dWatchState`, 700 ms).
+- Badge: `DIRECT` chip + `LIVE · DIR`; GBP kaliti bo'lmasa `OFFLINE`.
+
+### 14.3 Test (`mobile/_t_direct.js`, `_t_direct2.js`, statik server, API yo'q)
+| Tekshiruv | Natija |
+|---|---|
+| XAUUSD M1 direct: 600 bar, ratio 1.0028-1.0034 | **PASS** (`LIVE · DIR`, chip `DIRECT`) |
+| M15 ga almashish -> avtomatik reload | **PASS** (badge LIVE · DIR) |
+| GBPUSD kalitsiz | **PASS** (halol `OFFLINE`, 2500 oflayn bar) |
+| XAU'ga qaytish | **PASS** |
+| JS xatolar | **0** |
+
+### 14.4 APK
+- `apk-build/build.ps1` qayta ishga tushirildi, `XAUView.apk` **0.46 MB** (direct mode ichida).
+- Telefonda: birinchi ochilishda `offline` tanlansa -> ilova ichidagi snapshot; server/manzil berilsa -> LAN live.
+- **Internetsiz** ishlaydi (APK ichida `assets/index.html`).
+
+### 14.5 Halol cheklovlar
+- Direct rejim = **chart + chizma + indikator**; alertlar serverda ishlaydi (serverless'da yo'q).
+- PAXG fyuchers emas, spot token: narx ~0.1-0.4% farq qilishi mumkin (normallashtirilgan).
+- Yahoo/stooq brauzerdan CORS bermaydi -> ular faqat server manbasi sifatida qoladi.
+- GBPUSD intraday uchun bepul CORS manba yo'q -> TwelveData kaliti yoki server.

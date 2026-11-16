@@ -1,0 +1,25 @@
+const puppeteer = require('D:/Project/AI/tradelab/node_modules/puppeteer-core');
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+(async () => {
+  const b = await puppeteer.launch({ executablePath: 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: 'new', args: ['--no-sandbox','--disable-gpu'] });
+  const p = await b.newPage();
+  const errs = [];
+  p.on('pageerror', e => errs.push(String(e).slice(0,150)));
+  await p.setViewport({ width: 393, height: 873, deviceScaleFactor: 3, isMobile: true, hasTouch: true });
+  await p.goto('http://127.0.0.1:8899/index.html', { waitUntil: 'load' });
+  await p.evaluate(() => localStorage.setItem('xauview.direct', '1'));
+  await p.reload({ waitUntil: 'load' });
+  await sleep(7000);
+  const xau = await p.evaluate(() => ({ live: document.getElementById('live').textContent, bars: nB(), chip: document.getElementById('provChip').textContent }));
+  console.log('XAU', JSON.stringify(xau));
+  await p.screenshot({ path: 'D:/Project/AI/tvclone/shots/m83-direct-xau.png' });
+  await p.evaluate(() => setSym('GBPUSD'));
+  await sleep(3500);
+  const gbp = await p.evaluate(() => ({ live: document.getElementById('live').textContent, bars: nB() }));
+  console.log('GBP', JSON.stringify(gbp));
+  await p.evaluate(() => { setSym('XAUUSD'); });
+  await sleep(4500);
+  console.log('BACK', JSON.stringify(await p.evaluate(() => ({ live: document.getElementById('live').textContent, bars: nB() }))));
+  console.log('ERRORS', JSON.stringify(errs.slice(0,3)));
+  await b.close();
+})().catch(e => { console.log('FAIL', String(e).slice(0,300)); process.exit(1); });
