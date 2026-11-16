@@ -70,6 +70,10 @@ function askNotify(){
   });
 }
 function notify(title, body){
+  /* APK: native NotificationManager (tray'da ko'rinadi, ilova fonda bo'lsa ham) */
+  try {
+    if (typeof And !== 'undefined' && And && And.notifyAlert) { And.notifyAlert(String(title || ''), String(body || '')); return; }
+  } catch (e0) {}
   /* v7: Android Chrome'da 'new Notification' ishlamaydi -> PWA service worker orqali */
   try {
     if (window.__PWA && window.__PWA.notify) { window.__PWA.notify(title, body); return; }

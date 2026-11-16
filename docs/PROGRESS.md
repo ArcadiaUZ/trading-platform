@@ -512,3 +512,14 @@ APK'da "Menyu -> Manba" ga `wss://xauview.onrender.com` yozish ixtiyoriy.
 - Natija APK: `XAUView.apk` 483 879 B, sha256 `b0c6ec081b82bb40...`, Desktop'ga ham nusxalandi.
 - Eslatma: APK ichidagi ilova "muzlatilgan" (o'z versiyasi bilan); brauzer/PWA esa har doim eng yangi
   (Render'dan). Yangi chart/gesture o'zgarishi -> APK'ni qayta yig'ish.
+
+## 18. APK v1.2 — "app" hissi (splash / keep-screen-on / native bildirishnoma)
+
+- `res/drawable/splash.xml` + `windowBackground` -> ochilishda qora fon + logo (oq flash yo'q).
+- `web.setKeepScreenOn(true)` -> savdo paytida ekran o'chmaydi.
+- `Bridge.notifyAlert(title, body)` + `NotificationChannel 'xauview_alerts'` (IMPORTANCE_HIGH, vibratsiya);
+  `_m4_ui.js notify()` birinchi navbatda native yo'lni chaqiradi -> alert tray'da ko'rinadi, bosilganda ilova ochiladi.
+- `versionCode 3 / versionName 1.2`; APK 483 949 B.
+- Hajm tahlili (nega 0.46 MB): `assets/index.html` 1.47 MB = butun ilova, `classes.dex` 13 KB.
+  TradingView 109 MB (8 dex = 77.6 MB Kotlin, res/raw videolar 14 MB, web qismi 0.97 MB) -
+  ya'ni hajm native kod + media'dan, chart esa ular ham WebView'da.

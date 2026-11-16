@@ -79,3 +79,29 @@ powershell -NoProfile -ExecutionPolicy Bypass -File apk-build\build.ps1
 ```
 
 Natija: `D:\Project\AI\tvclone\XAUView.apk` - 483 879 B, sha256 `b0c6ec08...`, imzo o'sha keystore.
+
+## v1.2 - "app" hissi: splash, keep-screen-on, native bildirishnoma
+
+| Qo'shildi | Fayl | Hajmi |
+|---|---|---|
+| Splash (qora fon + logo, oq flash yo'q) | `res/drawable/splash.xml`, `styles.xml windowBackground` | 640 B |
+| Ekran o'chmaydi (savdo paytida) | `MainActivity: web.setKeepScreenOn(true)` | 0 B |
+| Alert -> **native tray bildirishnoma** (ilova fonda bo'lsa ham), bosilganda ilova ochiladi | `Bridge.notifyAlert()` + `NotificationChannel xauview_alerts` + `_m4_ui.js notify()` | ~7 KB dex |
+
+`versionCode 3 / versionName 1.2`, APK **483 949 B**.
+
+### APK ichida nima bor (siqilmagan)
+
+| Entry | Hajm | Nima |
+|---|---|---|
+| `assets/index.html` | 1 470 713 B (460 882 siqilgan) | **butun ilova**: chart dvigateli, gesture'lar, 14 chizma asbobi, Asia-FU indikatori, alert, WS/PWA |
+| `classes.dex` | 13 100 B | native shell (WebView, bridge, notification) - Kotlin YO'Q |
+| `ic_launcher.png` | 5 632 B | ikonka |
+| `resources.arsc` | 1 164 B | matn/rang/uslub |
+| jami | 1 496 423 B -> **477 113 B** (0.32) | |
+
+Taqqoslash uchun TradingView 1.20.87 XAPK: 52.1 MB yuklab olish / **109.4 MB o'rnatilgan**:
+8 ta `classes*.dex` = **77.6 MB** Kotlin kod, `res/raw` = **14 MB** (onboarding videolar mp4),
+`resources.arsc` = 7 MB, shriftlar 2.6 MB; **web qismi faqat 0.97 MB**
+(`assets/dark/index.html` + `feature_chart_kotlin_js_client.js` 350 KB) - ya'ni ularning charti ham WebView'da.
+Demak 50 MB - bu chart sifati emas, balki ulkan native kod + media.

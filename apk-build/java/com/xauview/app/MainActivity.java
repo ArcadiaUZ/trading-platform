@@ -3,6 +3,11 @@ package com.xauview.app;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Intent;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.graphics.Color;
@@ -28,6 +33,7 @@ public class MainActivity extends Activity {
     private static final String PREFS = "xauview";
     private static final String KEY_URL = "server_url";
     private static final String DEFAULT_URL = "wss://xauview.onrender.com";
+    private static final String CH_ALERTS = "xauview_alerts";
     private WebView web;
     private SharedPreferences prefs;
 
@@ -57,6 +63,8 @@ public class MainActivity extends Activity {
         if (Build.VERSION.SDK_INT >= 21) s.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
 
         web.addJavascriptInterface(new Bridge(), "And");
+        web.setKeepScreenOn(true);   // savdo paytida ekran o'chmasin
+        createChannels();
 
         web.setWebChromeClient(new WebChromeClient() {
             @Override
@@ -144,7 +152,44 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void chooseServer() { runOnUiThread(new Runnable() { public void run() { askServer(true); } }); }
         @JavascriptInterface
+        public void notifyAlert(final String title, final String body) { showAlertNotification(title, body); }
+
+        @JavascriptInterface
         public String platform() { return "android-apk"; }
+    }
+
+    private void createChannels() {
+        if (Build.VERSION.SDK_INT >= 26) {
+            NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+            NotificationChannel ch = new NotificationChannel(CH_ALERTS, "XAUView ogohlantirishlar", NotificationManager.IMPORTANCE_HIGH);
+            ch.setDescription("Narx / zona ogohlantirishlari");
+            ch.enableVibration(true);
+            nm.createNotificationChannel(ch);
+        }
+    }
+
+    /** Alert oynasiga native bildirishnoma (tray). WebView fonda bo'lsa ham ko'rinadi. */
+    private void showAlertNotification(final String title, final String body) {
+        runOnUiThread(new Runnable() {
+            public void run() {
+                try {
+                    Intent i = new Intent(MainActivity.this, MainActivity.class);
+                    i.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    PendingIntent pi = PendingIntent.getActivity(MainActivity.this, 0, i,
+                            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+                    Notification.Builder nb = new Notification.Builder(MainActivity.this, CH_ALERTS)
+                            .setSmallIcon(android.R.drawable.ic_dialog_info)
+                            .setContentTitle(title == null || title.length() == 0 ? "XAUView" : title)
+                            .setContentText(body == null ? "" : body)
+                            .setStyle(new Notification.BigTextStyle().bigText(body == null ? "" : body))
+                            .setAutoCancel(true)
+                            .setWhen(System.currentTimeMillis())
+                            .setContentIntent(pi);
+                    NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                    nm.notify((int) (System.currentTimeMillis() % 100000), nb.build());
+                } catch (Throwable t) { }
+            }
+        });
     }
 
     @Override
