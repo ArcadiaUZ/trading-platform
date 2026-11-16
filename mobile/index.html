@@ -1480,6 +1480,9 @@ function beep(){
 function vibrate(){ if (navigator.vibrate) { try { navigator.vibrate([40, 60, 40]); } catch (e) {} } }
 
 /* ---------- live feed ---------- */
+/* APK / file:// da standart manba: Render'dagi bulut server.
+   O'zgartirish: Menyu -> Manba (localStorage 'xauview.feed') yoki APK server oynasi. */
+var DEFAULT_FEED = 'wss://xauview.onrender.com';
 function feedBase(){
   var ls = null;
   try { ls = localStorage.getItem('xauview.feed'); } catch (e) {}
@@ -1487,7 +1490,7 @@ function feedBase(){
   if (location.protocol === 'http:' || location.protocol === 'https:') {
     return (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host;
   }
-  return null;
+  return DEFAULT_FEED;
 }
 function httpBase(){
   var b = feedBase();

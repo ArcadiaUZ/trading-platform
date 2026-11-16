@@ -27,7 +27,7 @@ import android.widget.Toast;
 public class MainActivity extends Activity {
     private static final String PREFS = "xauview";
     private static final String KEY_URL = "server_url";
-    private static final String DEFAULT_URL = "http://10.149.101.17:8765/";
+    private static final String DEFAULT_URL = "wss://xauview.onrender.com";
     private WebView web;
     private SharedPreferences prefs;
 
@@ -78,9 +78,9 @@ public class MainActivity extends Activity {
             try { requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"}, 7); } catch (Throwable t) {}
         }
 
-        String url = prefs.getString(KEY_URL, "");
-        if (url.length() == 0) askServer(false);
-        else load(url);
+        // Ilova HAR DOIM APK ichidagi assets'dan yuklanadi (tez, internetsiz ham chiziladi).
+        // Ma'lumot esa bulut serverdan: _m4_ui.js feedBase() default = wss://xauview.onrender.com
+        load("offline");
     }
 
     private void load(String url) {
@@ -94,6 +94,24 @@ public class MainActivity extends Activity {
         web.loadUrl(u);
     }
 
+    /** Manba (feed) manzilini localStorage'ga yozib, ilovani qayta yuklaydi. */
+    private void applyFeed(String u) {
+        final String v = u == null ? "" : u.trim();
+        prefs.edit().putString(KEY_URL, v).apply();
+        web.post(new Runnable() {
+            public void run() {
+                String js;
+                if (v.length() == 0) {
+                    js = "try{localStorage.removeItem('xauview.feed');}catch(e){};location.reload();";
+                } else {
+                    js = "try{localStorage.setItem('xauview.feed','" + v.replace("\\", "\\\\").replace("'", "\\'") + "');}catch(e){};location.reload();";
+                }
+                if (Build.VERSION.SDK_INT >= 19) web.evaluateJavascript(js, null);
+                else web.loadUrl("javascript:" + js);
+            }
+        });
+    }
+
     private void askServer(final boolean cancelable) {
         final EditText et = new EditText(this);
         et.setInputType(InputType.TYPE_TEXT_VARIATION_URI);
@@ -102,22 +120,14 @@ public class MainActivity extends Activity {
         et.setText(cur);
         et.setSelection(et.getText().length());
         AlertDialog.Builder ab = new AlertDialog.Builder(this);
-        ab.setTitle("Server manzili");
-        ab.setMessage("Telefon va kompyuter bir Wi-Fi da bolsin. Masalan: http://10.149.101.17:8765 . Oflayn rejim uchun: offline");
+        ab.setTitle("Ma'lumot serveri");
+        ab.setMessage("Standart: wss://xauview.onrender.com (bulut, 24/7).\nUy Wi-Fi: ws://192.168.1.10:8765 .\nBo'sh qoldirsangiz standart ishlatiladi.");
         ab.setView(et);
-        ab.setPositiveButton("Ulanish", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface d, int i) {
-                String v = et.getText().toString().trim();
-                prefs.edit().putString(KEY_URL, v).apply();
-                load(v);
-            }
+        ab.setPositiveButton("Saqlash", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface d, int i) { applyFeed(et.getText().toString()); }
         });
-        if (cancelable) ab.setNegativeButton("Bekor", null);
-        else ab.setNegativeButton("Oflayn", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface d, int i) {
-                prefs.edit().putString(KEY_URL, "offline").apply();
-                load("offline");
-            }
+        ab.setNegativeButton("Standart", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface d, int i) { applyFeed(""); }
         });
         ab.show();
     }
@@ -126,13 +136,10 @@ public class MainActivity extends Activity {
 
     public class Bridge {
         @JavascriptInterface
-        public String getServer() { return prefs.getString(KEY_URL, ""); }
+        public String getServer() { String s = prefs.getString(KEY_URL, ""); return s.length() == 0 ? DEFAULT_URL : s; }
         @JavascriptInterface
         public void setServer(final String u) {
-            runOnUiThread(new Runnable() { public void run() {
-                prefs.edit().putString(KEY_URL, u).apply();
-                load(u);
-            } });
+            runOnUiThread(new Runnable() { public void run() { applyFeed(u); } });
         }
         @JavascriptInterface
         public void chooseServer() { runOnUiThread(new Runnable() { public void run() { askServer(true); } }); }

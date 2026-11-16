@@ -500,3 +500,15 @@ APK'da "Menyu -> Manba" ga `wss://xauview.onrender.com` yozish ixtiyoriy.
   + `RENDER_API_KEY` secret bilan yopildi. Push -> ~35 s -> live (tekshirildi).
 - Keep-alive workflow qo'lda ishga tushirilib **success** olindi, keyin schedule bo'yicha ishladi
   (run 43925658346, 439259...).
+
+## 17. APK v1.1 — standart manba bulut server
+
+- `_m4_ui.js`: `DEFAULT_FEED = 'wss://xauview.onrender.com'` — `file://` (APK) uchun zaxira manba.
+- `MainActivity`: `DEFAULT_URL` = o'sha URL, birinchi ochilishda **dialog yo'q**, har doim
+  `android_asset/index.html` yuklanadi; `chooseServer/setServer` endi localStorage'ga yozadi
+  (sahifa almashmaydi, ilova local qoladi). `versionCode 2 / versionName 1.1`.
+- Test `mobile/_t_apk_default.js` (Chrome `file://`): `feedBase()` = Render WSS, **600 bar**,
+  YAHOO chip, LIVE, jonli narx, **0 console error** -> `shots/r21-apk-default.png`.
+- Natija APK: `XAUView.apk` 483 879 B, sha256 `b0c6ec081b82bb40...`, Desktop'ga ham nusxalandi.
+- Eslatma: APK ichidagi ilova "muzlatilgan" (o'z versiyasi bilan); brauzer/PWA esa har doim eng yangi
+  (Render'dan). Yangi chart/gesture o'zgarishi -> APK'ni qayta yig'ish.

@@ -53,3 +53,29 @@ Quvur: `aapt2 compile` -> `aapt2 link` (-A assets) -> `javac` -> `d8` -> `jar uf
 
 - `apk-build/xauview.keystore` birinchi build'da avtomatik yaratiladi (alias `xauview`, parol `xauview123`).
 - Bu **debug/dev imzo** - Play Store uchun alohida keystore kerak (va targetSdk 35).
+
+## v1.1 - standart manba = bulut server (setup yo'q)
+
+Maqsad: APK o'rnatildi -> ochildi -> darhol jonli XAUUSD. Hech qanday server manzili so'ralmaydi.
+
+O'zgarishlar:
+
+1. `mobile/src/_m4_ui.js` -> `feedBase()` oxirida `return DEFAULT_FEED;`
+   `var DEFAULT_FEED = 'wss://xauview.onrender.com';` (faqat `file://`/APK uchun;
+   brauzerda avvalgidek `location.host`).
+2. `MainActivity` -> `DEFAULT_URL = "wss://xauview.onrender.com"`; `onCreate`da dialog yo'q,
+   **har doim** `file:///android_asset/index.html` yuklanadi (tez, internetsiz ham chart chiziladi).
+3. `And.chooseServer()` / `setServer()` -> sahifani almashtirmaydi, `localStorage['xauview.feed']`
+   ga yozib `location.reload()` qiladi (ilova local qoladi, faqat ma'lumot manbai o'zgaradi).
+   "Standart" tugmasi -> `removeItem` (yana bulutga qaytadi).
+4. `versionCode 2`, `versionName 1.1`.
+
+Tekshiruv (`mobile/_t_apk_default.js`, Chrome `file://`): `feedBase() = wss://xauview.onrender.com`,
+600 bar, chip `YAHOO`, badge `LIVE`, narx jonli, **0 console error** -> `shots/r21-apk-default.png`.
+
+```
+node mobile/src/assemble.js
+powershell -NoProfile -ExecutionPolicy Bypass -File apk-build\build.ps1
+```
+
+Natija: `D:\Project\AI\tvclone\XAUView.apk` - 483 879 B, sha256 `b0c6ec08...`, imzo o'sha keystore.
